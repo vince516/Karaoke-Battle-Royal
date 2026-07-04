@@ -1,0 +1,67 @@
+/* ============================================================
+   Base tokens + reset — ported verbatim from the prototype.
+   These CSS custom properties are the single source of truth;
+   Tailwind's theme mirrors them for utility classes.
+   ============================================================ */
+:root {
+  --ink: #0e0e10;
+  --panel: #17171a;
+  --panel2: #1f1f23;
+  --line: #2c2c31;
+  --red: #e10a17;
+  --gold: #ffb300;
+  --mint: #17e8a0;
+  --splat: #ff5330;
+  --bloom: #ff7aa8;
+  --txt: #efeff1;
+  --mut: #adadb8;
+  --dim: #77777f;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+html,
+body {
+  background: var(--ink);
+  color: var(--txt);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overscroll-behavior: none;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  touch-action: manipulation;
+}
+input {
+  font-family: inherit;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.glass {
+  background: rgba(16, 16, 20, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+  }
+}

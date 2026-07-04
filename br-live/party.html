@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0E0E10">
+<title>Battle Royale — Party Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E0E10; --panel:#17171A; --panel2:#1F1F23; --line:#2C2C31;
+  --red:#E10A17; --gold:#FFB300; --mint:#17E8A0; --bloom:#FF7AA8;
+  --txt:#EFEFF1; --mut:#ADADB8; --dim:#77777F;
+  --sab:env(safe-area-inset-bottom,0px); --sat:env(safe-area-inset-top,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--ink);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:15px;min-height:100%}
+body{background:
+  radial-gradient(70% 50% at 15% 0%, rgba(225,10,23,.14), transparent 60%),
+  radial-gradient(60% 45% at 90% 100%, rgba(23,232,160,.08), transparent 60%), var(--ink)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation}
+input{font-family:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:520px;margin:0 auto;padding:calc(18px + var(--sat)) 20px calc(30px + var(--sab))}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.brand{font-family:'Archivo';font-weight:900;font-size:19px}
+.brand b{color:var(--red)}
+.mode{margin-left:auto;font-size:10px;font-weight:900;letter-spacing:1.6px;color:var(--gold);border:1px solid rgba(255,179,0,.45);border-radius:999px;padding:5px 12px}
+.screen{display:none;animation:in .35s cubic-bezier(.2,1,.4,1)}
+.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+h1{font-family:'Archivo';font-weight:900;font-size:clamp(26px,7vw,34px);line-height:1.1;letter-spacing:-.3px}
+h1 i{font-style:normal;color:var(--red)}
+.sub{color:var(--mut);font-size:13.5px;line-height:1.55;margin:10px 0 24px}
+.card{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.lab{font-size:10px;font-weight:900;letter-spacing:1.8px;color:var(--dim);margin-bottom:8px;display:block}
+.fld{width:100%;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:14px;color:var(--txt);font-size:15px;font-weight:600;outline:none}
+.fld:focus{border-color:var(--red)}
+.row{display:flex;gap:10px}
+.row .fld{min-width:0}
+.big{width:100%;padding:16px;border-radius:14px;font-weight:900;font-size:15.5px;letter-spacing:.3px;transition:transform .1s}
+.big:active{transform:scale(.97)}
+.big.red{background:var(--red);color:#fff}
+.big.ghost{border:1.5px solid var(--line);color:var(--mut);font-weight:700}
+.big.gold{background:var(--gold);color:#3a2800}
+.pinrow{display:flex;gap:10px;justify-content:center}
+.pin{width:56px;height:64px;text-align:center;font-family:'Archivo';font-weight:900;font-size:26px;background:var(--panel2);border:1.5px solid var(--line);border-radius:14px;color:var(--txt);outline:none}
+.pin:focus{border-color:var(--gold)}
+.slotpick{display:flex;gap:8px}
+.slotpick button{flex:1;padding:12px 0;border-radius:11px;border:1.5px solid var(--line);font-weight:800;font-size:14px;color:var(--mut)}
+.slotpick button.on{border-color:var(--red);background:rgba(225,10,23,.14);color:#ff8093}
+/* room card */
+.roomhead{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.qr{width:150px;height:150px;border-radius:16px;background:#fff;padding:8px;flex:none}
+.qr img{width:100%;height:100%;image-rendering:pixelated}
+.qrfall{width:100%;height:100%;display:none;align-items:center;justify-content:center;color:#111;font-weight:900;font-family:'Archivo';font-size:24px;text-align:center}
+.codebox{flex:1;min-width:0}
+.rcode{font-family:'Archivo';font-weight:900;font-size:34px;letter-spacing:4px;color:var(--gold)}
+.rmeta{color:var(--mut);font-size:12.5px;line-height:1.6;margin-top:6px}
+.rmeta b{color:var(--txt)}
+.pinshow{display:inline-flex;gap:6px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:800;font-size:13px;margin-top:8px}
+.pinshow i{font-style:normal;color:var(--gold);letter-spacing:3px;font-family:'Archivo'}
+/* members */
+.members{display:flex;flex-wrap:wrap;gap:12px}
+.mem{display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}}
+.mav{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:19px;position:relative}
+.mem.host .mav::after{content:"HOST";position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:var(--gold);color:#3a2800;font-size:7px;font-weight:900;letter-spacing:.6px;padding:2px 6px;border-radius:999px}
+.mem .mn{font-size:10.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem.ghosty .mav{border:2px dashed var(--line);background:none;color:var(--dim)}
+.mem.ghosty .mn{color:var(--dim)}
+/* queue rows */
+.qrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);margin-bottom:9px}
+.qrow .qn{font-family:'Archivo';font-weight:900;font-size:13px;color:var(--dim);width:18px;text-align:center;flex:none}
+.qrow .qa{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:14px}
+.qrow .qi{flex:1;min-width:0}
+.qrow .qname{font-weight:800;font-size:13.5px}
+.qrow .qsong{font-size:11.5px;color:var(--mut);margin-top:1px}
+.qrow .qsong b{color:var(--gold);font-weight:700}
+.qrow.mine{border-color:rgba(255,179,0,.5);background:rgba(255,179,0,.06)}
+.qrow.open{border-style:dashed;color:var(--dim)}
+.qrow.open .qa{border:2px dashed var(--line);background:none}
+.pickbtn{background:var(--red);color:#fff;font-weight:800;font-size:12px;border-radius:10px;padding:9px 13px;flex:none}
+/* song picker */
+.song{display:flex;align-items:center;gap:12px;padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);margin-bottom:9px;width:100%;text-align:left}
+.song:active{transform:scale(.99)}
+.song .sic{width:40px;height:40px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:19px;background:var(--panel2);border:1px solid var(--line)}
+.song .si{flex:1;min-width:0}
+.song .snm{font-weight:800;font-size:13.5px}
+.song .sdt{font-size:11px;color:var(--mut);margin-top:1px}
+.song .dur{font-size:11px;color:var(--dim);font-weight:700;flex:none}
+.song.sel{border-color:var(--gold);background:rgba(255,179,0,.07)}
+.sunotag{font-size:8.5px;font-weight:900;letter-spacing:.6px;background:linear-gradient(90deg,#7b2ff7,#ff6fb0);color:#fff;padding:2px 7px;border-radius:999px;vertical-align:middle}
+.copycard{background:rgba(123,47,247,.08);border:1px solid rgba(123,47,247,.4);border-radius:14px;padding:14px;margin-top:12px}
+.copycard .cc-t{font-weight:800;font-size:12.5px;margin-bottom:6px}
+.copycard .cc-p{font-size:11.5px;color:var(--mut);line-height:1.55;background:rgba(0,0,0,.3);border-radius:10px;padding:10px;font-family:ui-monospace,monospace}
+.copybtn{margin-top:9px;font-size:12px;font-weight:800;color:#c9a4ff;border:1px solid rgba(123,47,247,.5);border-radius:999px;padding:7px 14px}
+.toast{position:fixed;left:50%;bottom:calc(26px + var(--sab));transform:translateX(-50%) translateY(90px);background:var(--panel2);border:1px solid var(--gold);color:var(--gold);font-weight:700;font-size:13px;border-radius:999px;padding:11px 19px;z-index:99;transition:transform .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.steps{display:flex;gap:6px;margin-bottom:22px}
+.steps i{height:4px;flex:1;border-radius:999px;background:var(--line)}
+.steps i.on{background:var(--red)}
+.note{font-size:11.5px;color:var(--dim);line-height:1.6;margin-top:14px}
+.note b{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">✕ Battle <b>Royale</b></div>
+    <span class="mode">PARTY ROOM · PROTOTYPE</span>
+  </div>
+
+  <!-- ============ SCREEN 0: START ============ -->
+  <section class="screen on" id="s0">
+    <h1>Group videoke,<br>one <i>QR</i> away</h1>
+    <p class="sub">Host a private room for your barkada. Everyone joins by scanning — no download, no sign-up. This small-room prototype runs the same engine as the thousands-viewer live arena.</p>
+    <button class="big red" onclick="go('s1')">🎤 Host a room</button>
+    <div style="height:10px"></div>
+    <button class="big ghost" onclick="go('s3')">📲 I have a room code</button>
+  </section>
+
+  <!-- ============ SCREEN 1: HOST SETUP ============ -->
+  <section class="screen" id="s1">
+    <div class="steps"><i class="on"></i><i></i><i></i></div>
+    <h1>Set up your room</h1>
+    <p class="sub">Name it, protect it with a PIN, and choose how many singer slots tonight gets.</p>
+    <div class="card">
+      <label class="lab">ROOM NAME</label>
+      <input class="fld" id="roomName" value="Friday Night Videoke" maxlength="30">
+    </div>
+    <div class="card">
+      <label class="lab">ROOM PIN (guests need this)</label>
+      <div class="pinrow">
+        <input class="pin num" maxlength="1" value="7"><input class="pin num" maxlength="1" value="7">
+        <input class="pin num" maxlength="1" value="2"><input class="pin num" maxlength="1" value="4">
+      </div>
+    </div>
+    <div class="card">
+      <label class="lab">SINGER SLOTS</label>
+      <div class="slotpick" id="slotpick">
+        <button onclick="pickSlots(this,4)">4</button>
+        <button onclick="pickSlots(this,6)">6</button>
+        <button class="on" onclick="pickSlots(this,8)">8</button>
+        <button onclick="pickSlots(this,10)">10</button>
+      </div>
+    </div>
+    <button class="big red" onclick="createRoom()">Create room →</button>
+  </section>
+
+  <!-- ============ SCREEN 2: HOST ROOM / QR ============ -->
+  <section class="screen" id="s2">
+    <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+    <h1 id="roomTitle">Friday Night Videoke</h1>
+    <p class="sub">Show this screen (or cast it to the TV). Guests scan the QR, enter the PIN, and land in the lobby.</p>
+    <div class="card">
+      <div class="roomhead">
+        <div class="qr"><img id="qrimg" alt="Room QR" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="qrfall" id="qrfall">SCAN<br>/BRDK52</div></div>
+        <div class="codebox">
+          <span class="lab">ROOM CODE</span>
+          <div class="rcode" id="rcode">BRDK52</div>
+          <div class="pinshow">PIN <i id="pinshow">7724</i></div>
+          <div class="rmeta">battleroyale.app/join/<b id="rurl">BRDK52</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <label class="lab">IN THE LOBBY · <span class="num" id="memcount">1</span></label>
+      <div class="members" id="members"></div>
+    </div>
+    <button class="big gold" onclick="go('s5')">Open lobby & queue →</button>
+    <p class="note"><b>Production note:</b> this room state (members, queue, votes) lives in one WebSocket room / Durable Object for small groups. The live arena is the same state machine behind a broadcast layer — HLS video out, pub/sub chat fan-out, and server-side gift aggregation for thousands of viewers.</p>
+  </section>
+
+  <!-- ============ SCREEN 3: GUEST JOIN ============ -->
+  <section class="screen" id="s3">
+    <div class="steps"><i class="on"></i><i></i><i></i></div>
+    <h1>Join the room</h1>
+    <p class="sub">Scanned the QR? The code is pre-filled — just add the PIN your host gave you.</p>
+    <div class="card">
+      <label class="lab">ROOM CODE</label>
+      <input class="fld" id="joinCode" value="BRDK52" maxlength="6" style="letter-spacing:4px;font-family:'Archivo';font-weight:900;font-size:20px;text-transform:uppercase">
+    </div>
+    <div class="card">
+      <label class="lab">ROOM PIN</label>
+      <div class="pinrow">
+        <input class="pin num" maxlength="1" id="jp1"><input class="pin num" maxlength="1" id="jp2">
+        <input class="pin num" maxlength="1" id="jp3"><input class="pin num" maxlength="1" id="jp4">
+      </div>
+    </div>
+    <button class="big red" onclick="checkPin()">Unlock →</button>
+  </section>
+
+  <!-- ============ SCREEN 4: NAME ============ -->
+  <section class="screen" id="s4">
+    <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+    <h1>Who's singing?</h1>
+    <p class="sub">Pick a name and a color. No account — you exist only in this room.</p>
+    <div class="card">
+      <label class="lab">DISPLAY NAME</label>
+      <input class="fld" id="gname" placeholder="e.g. Vince" maxlength="14">
+    </div>
+    <div class="card">
+      <label class="lab">COLOR</label>
+      <div class="members" id="colorpick"></div>
+    </div>
+    <button class="big red" onclick="joinLobby()">Enter lobby →</button>
+  </section>
+
+  <!-- ============ SCREEN 5: LOBBY + QUEUE ============ -->
+  <section class="screen" id="s5">
+    <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <h1 id="lobbyTitle">Friday Night Videoke</h1>
+    <p class="sub">Claim a slot, pick your Suno track, and hit start when the room is ready. Tomatoes reload every 30s once the battle begins. 🍅</p>
+    <div class="card">
+      <label class="lab">SINGING ORDER · <span class="num" id="qfilled">0</span>/<span class="num" id="qtotal">8</span> SLOTS</label>
+      <div id="queue"></div>
+    </div>
+    <button class="big red" onclick="startBattle()">▶ Start the battle</button>
+    <div style="height:10px"></div>
+    <button class="big ghost" onclick="go('s2')">↺ Back to room QR</button>
+  </section>
+
+  <!-- ============ SCREEN 6: SONG PICKER ============ -->
+  <section class="screen" id="s6">
+    <h1>Pick your track</h1>
+    <p class="sub">All originals generated with Suno — zero licensing risk for the prototype. Timed lyrics ship in the same LRC format the arena's karaoke engine already reads.</p>
+    <div id="songlist"></div>
+    <div class="copycard">
+      <div class="cc-t">🎛️ Need another track? Suno prompt template:</div>
+      <div class="cc-p" id="sunoPrompt">upbeat OPM-style pop duet, male + female vocals trading lines, karaoke-friendly clear melody, catchy singalong chorus, 100 bpm, clean mix, radio structure verse-chorus-verse, emotional bridge — theme: [your theme]. Then export audio + request timestamped lyrics (.lrc).</div>
+      <button class="copybtn" onclick="copyPrompt()">Copy prompt</button>
+    </div>
+    <div style="height:14px"></div>
+    <button class="big ghost" onclick="go('s5')">← Back to lobby</button>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const HUES=['linear-gradient(135deg,#E10A17,#ff5d78)','linear-gradient(135deg,#0e8f6b,#17E8A0)','linear-gradient(135deg,#7b2ff7,#b98cff)','linear-gradient(135deg,#c76b00,#FFB300)','linear-gradient(135deg,#0a6fb0,#5ecbff)','linear-gradient(135deg,#a30a5e,#ff6fb0)'];
+let slots=8, pin='7724', me=null, myHue=HUES[3], pendingSlot=null;
+let members=[{n:'You (Host)',ini:'Y',hue:HUES[0],host:true}];
+let queue=[]; /* {name, ini, hue, song} per slot index */
+const SONGS=[
+ {t:'Gravity of You',d:'Pop duet · trading lines · 100 bpm',ic:'💞',dur:'2:58'},
+ {t:'Midnight Run',d:'Synthwave banger · high-energy chorus',ic:'🌃',dur:'3:12'},
+ {t:'Paper Crowns',d:'Acoustic ballad · big belting bridge',ic:'👑',dur:'3:40'},
+ {t:'Static Bloom',d:'Dance-pop · rap verse + sung hook',ic:'⚡',dur:'2:47'},
+ {t:'Last Train Home',d:'Slow-burn OPM-style anthem',ic:'🚉',dur:'3:55'},
+ {t:'Four AM Floor',d:'Club track · call-and-response',ic:'🪩',dur:'2:39'}
+];
+const GUESTS=[['Enrico','E'],['Stephen','S'],['Kaye','K'],['Mika','M'],['Dre','D'],['Bianca','B'],['JC','J']];
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+  window.scrollTo({top:0});
+}
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2400); }
+function pickSlots(btn,n){ slots=n; document.querySelectorAll('#slotpick button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+
+/* ---------- host: create room ---------- */
+function createRoom(){
+  const pins=document.querySelectorAll('#s1 .pin');
+  pin=[...pins].map(p=>p.value||'0').join('');
+  const code='BR'+Math.random().toString(36).slice(2,6).toUpperCase();
+  $('rcode').textContent=code; $('rurl').textContent=code;
+  $('pinshow').textContent=pin;
+  $('qrfall').innerHTML='SCAN<br>/'+code;
+  $('roomTitle').textContent=$('roomName').value||'Party Room';
+  $('lobbyTitle').textContent=$('roomName').value||'Party Room';
+  $('qrimg').src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data='+encodeURIComponent('https://battleroyale.app/join/'+code);
+  queue=Array(slots).fill(null);
+  $('qtotal').textContent=slots;
+  renderMembers(); renderQueue();
+  go('s2');
+  /* simulate the barkada scanning in */
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=5){clearInterval(iv);return;}
+    const g=GUESTS[i];
+    members.push({n:g[0],ini:g[1],hue:HUES[(i+1)%6]});
+    renderMembers();
+    toast(`📲 ${g[0]} scanned in`);
+    /* some guests auto-claim a slot with a song */
+    if(i<3){ const open=queue.indexOf(null); if(open>-1){ queue[open]={name:g[0],ini:g[1],hue:HUES[(i+1)%6],song:SONGS[(i+1)%SONGS.length].t}; renderQueue(); } }
+    i++;
+  },2600);
+}
+function renderMembers(){
+  const el=$('members'); el.innerHTML='';
+  members.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='mem'+(m.host?' host':'');
+    d.innerHTML=`<div class="mav" style="background:${m.hue}">${m.ini}</div><div class="mn">${m.n}</div>`;
+    el.appendChild(d);
+  });
+  const g=document.createElement('div');
+  g.className='mem ghosty';
+  g.innerHTML=`<div class="mav">📲</div><div class="mn">scan to join</div>`;
+  el.appendChild(g);
+  $('memcount').textContent=members.length;
+}
+
+/* ---------- guest: join ---------- */
+function checkPin(){
+  const got=['jp1','jp2','jp3','jp4'].map(i=>$(i).value||'').join('');
+  if(got===pin){ toast('✅ PIN accepted'); go('s4'); renderColors(); }
+  else toast('❌ Wrong PIN — ask your host');
+}
+function renderColors(){
+  const el=$('colorpick'); el.innerHTML='';
+  HUES.forEach((h,i)=>{
+    const d=document.createElement('button');
+    d.className='mem'; d.innerHTML=`<div class="mav" style="background:${h};${h===myHue?'box-shadow:0 0 0 3px var(--gold)':''}">${i+1}</div>`;
+    d.onclick=()=>{myHue=h;renderColors();};
+    el.appendChild(d);
+  });
+}
+function joinLobby(){
+  const n=($('gname').value||'Guest').trim();
+  me={n,ini:n[0].toUpperCase(),hue:myHue};
+  members.push(me);
+  renderMembers(); renderQueue();
+  toast(`🎉 Welcome, ${n}!`);
+  go('s5');
+}
+
+/* ---------- lobby queue ---------- */
+function renderQueue(){
+  const el=$('queue'); el.innerHTML='';
+  let filled=0;
+  queue.forEach((q,i)=>{
+    const row=document.createElement('div');
+    if(q){
+      filled++;
+      const mine=me&&q.name===me.n;
+      row.className='qrow'+(mine?' mine':'');
+      row.innerHTML=`<span class="qn num">${i+1}</span>
+        <span class="qa" style="background:${q.hue}">${q.ini}</span>
+        <span class="qi"><span class="qname">${q.name}</span><span class="qsong">🎵 <b>“${q.song}”</b> <span class="sunotag">SUNO ORIGINAL</span></span></span>`;
+    }else{
+      row.className='qrow open';
+      row.innerHTML=`<span class="qn num">${i+1}</span>
+        <span class="qa">👤</span>
+        <span class="qi"><span class="qname" style="color:var(--gold)">Open slot</span><span class="qsong">Claim it and pick a track</span></span>
+        <button class="pickbtn">Claim</button>`;
+      row.querySelector('.pickbtn').onclick=()=>{ pendingSlot=i; renderSongs(); go('s6'); };
+    }
+    el.appendChild(row);
+  });
+  $('qfilled').textContent=filled;
+}
+function renderSongs(){
+  const el=$('songlist'); el.innerHTML='';
+  SONGS.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='song';
+    b.innerHTML=`<span class="sic">${s.ic}</span>
+      <span class="si"><span class="snm">${s.t} <span class="sunotag">SUNO</span></span><span class="sdt">${s.d}</span></span>
+      <span class="dur num">${s.dur}</span>`;
+    b.onclick=()=>{
+      const who=me||{n:'You (Host)',ini:'Y',hue:HUES[0]};
+      queue[pendingSlot]={name:who.n,ini:who.ini,hue:who.hue,song:s.t};
+      renderQueue(); toast(`🔒 Slot ${pendingSlot+1} · “${s.t}”`); go('s5');
+    };
+    el.appendChild(b);
+  });
+}
+function copyPrompt(){
+  navigator.clipboard&&navigator.clipboard.writeText($('sunoPrompt').textContent);
+  toast('📋 Suno prompt copied');
+}
+function startBattle(){
+  toast('🎤 Launching the arena…');
+  setTimeout(()=>{ window.location.href='arena.html'; },700);
+}
+renderQueue();
+</script>
+</body>
+</html>

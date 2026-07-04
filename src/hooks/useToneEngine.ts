@@ -1,0 +1,198 @@
+import { useEffect, type RefObject } from 'react'
+import type { Song, SongLine } from '../lib/types'
+import { BEAT, NOTES } from '../lib/songs'
+import { useRoom } from '../state/roomStore'
+
+/* ============================================================
+   Tone engine — a faithful port of the prototype's canvas loop.
+
+   Song = ordered lines; each line = melody segments {note, beats}
+   at 520 ms/beat. Scrolling gold pitch blocks; the singer dot
+   rides them (mint on-tone / splat off, dist < 14px). Per-line
+   accuracy → pass (≥62%) or fail. Completing with ≥ n-1 passes =
+   TONE COMPLETE + hype surge.
+
+   In M1 the singer's pitch is *simulated* (follows the target
+   melody with noise + occasional slips). In M4 this same head
+   position is fed by real Web Audio pitch frames off the singer's
+   mic, relayed through the room so every viewer sees one dot.
+   ============================================================ */
+
+const lineDur = (L: SongLine) => L.mel.reduce((s, m) => s + m[1], 0) * BEAT
+
+/** Target note (0..1, y-normalised) at time `ms` into the line. */
+function noteAt(L: SongLine, ms: number): number {
+  let t = 0
+  for (const [n, len] of L.mel) {
+    t += len * BEAT
+    if (ms < t) return 1 - n / (NOTES - 1)
+  }
+  return 1 - L.mel[L.mel.length - 1][0] / (NOTES - 1)
+}
+
+export function useToneEngine(
+  canvasRef: RefObject<HTMLCanvasElement | null>,
+  baseRef: RefObject<HTMLSpanElement | null>,
+  fillRef: RefObject<HTMLSpanElement | null>,
+  song: Song,
+) {
+  useEffect(() => {
+    const cv = canvasRef.current
+    if (!cv) return
+    const ctx = cv.getContext('2d')
+    if (!ctx) return
+
+    const LINES = song.lines
+    let raf = 0
+    let lineIdx = 0
+    let lineStart = performance.now()
+    let lineResults: boolean[] = []
+    let lineAcc: number[] = []
+    let singerY = 38 // mid-canvas
+
+    const room = useRoom.getState
+    room().setLineResults([])
+
+    function sizeCanvas() {
+      if (!cv || !ctx) return
+      const r = cv.getBoundingClientRect()
+      cv.width = r.width * devicePixelRatio
+      cv.height = 76 * devicePixelRatio
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
+    }
+
+    function startLine() {
+      const L = LINES[lineIdx]
+      lineStart = performance.now()
+      lineAcc = []
+      if (baseRef.current) baseRef.current.textContent = L.t
+      const f = fillRef.current
+      if (f) {
+        f.textContent = L.t
+        f.style.transition = 'none'
+        f.style.width = '0%'
+        void f.offsetWidth
+        f.style.transition = `width ${lineDur(L)}ms linear`
+        f.style.width = '100%'
+      }
+    }
+
+    function endLine() {
+      const acc = lineAcc.length ? lineAcc.reduce((a, b) => a + b, 0) / lineAcc.length : 0
+      const pass = acc >= 0.62
+      lineResults = [...lineResults, pass]
+      const pts = Math.round(acc * 300)
+      room().addScore(
+        pass ? pts : Math.round(pts * 0.3),
+        pass ? `+${pts} TONE ✓` : `+${Math.round(pts * 0.3)} missed`,
+        pass,
+      )
+      if (pass) room().bumpHype(14)
+      else room().sysMsg(`⚠️ ${room().singer.name} missed the tone on line ${lineResults.length}`, 'sys-tomato')
+
+      lineIdx++
+      if (lineIdx >= LINES.length) {
+        const passed = lineResults.filter(Boolean).length
+        const done = passed >= LINES.length - 1
+        room().sysMsg(
+          done
+            ? `🏆 TONE COMPLETED — ${passed}/${LINES.length} lines! ${room().singer.name} advances`
+            : `❌ Tone not completed — ${passed}/${LINES.length}. Judges' call…`,
+          'sys-gold',
+        )
+        room().showToast(done ? '🏆 TONE COMPLETED!' : 'Tone incomplete…')
+        if (done) {
+          room().bumpHype(60)
+          room().spawnStamp('TONE COMPLETE!', 'gift')
+        }
+        lineIdx = 0
+        lineResults = []
+      }
+      room().setLineResults(lineResults)
+      startLine()
+    }
+
+    function draw(now: number) {
+      if (!cv || !ctx) return
+      const L = LINES[lineIdx]
+      const dur = lineDur(L)
+      const ms = now - lineStart
+      if (ms >= dur) {
+        endLine()
+        raf = requestAnimationFrame(draw)
+        return
+      }
+      const W = cv.getBoundingClientRect().width
+      const H = 76
+      const headX = W * 0.26
+      ctx.clearRect(0, 0, W, H)
+
+      // pitch grid
+      ctx.strokeStyle = 'rgba(255,255,255,.05)'
+      for (let i = 1; i < NOTES - 1; i++) {
+        const y = 12 + ((H - 24) * i) / (NOTES - 1)
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(W, y)
+        ctx.stroke()
+      }
+
+      // scrolling melody blocks
+      const speed = (W * 0.9) / dur
+      let t = 0
+      ctx.lineCap = 'round'
+      for (const [n, len] of L.mel) {
+        const x0 = headX + (t - ms) * speed
+        const x1 = headX + (t + len * BEAT - ms) * speed
+        const y = 12 + (H - 24) * (1 - n / (NOTES - 1))
+        const active = ms >= t && ms < t + len * BEAT
+        ctx.strokeStyle = active ? '#FFB300' : 'rgba(255,255,255,.28)'
+        ctx.lineWidth = active ? 12 : 9
+        ctx.beginPath()
+        ctx.moveTo(Math.max(x0 + 6, -40), y)
+        ctx.lineTo(Math.min(x1 - 6, W + 40), y)
+        ctx.stroke()
+        t += len * BEAT
+      }
+
+      // simulated singer pitch: follows target with noise + occasional slips
+      const target = 12 + (H - 24) * noteAt(L, ms)
+      const wobble = Math.sin(now / 130) * 4 + Math.sin(now / 47) * 2
+      const drift = Math.sin(now / 2400) > 0.82 ? 26 : 0
+      singerY += (target + wobble + drift - singerY) * 0.18
+      const dist = Math.abs(singerY - target)
+      const onTone = dist < 14
+      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / 40))
+
+      // head dot + trail
+      ctx.fillStyle = onTone ? 'rgba(23,232,160,.9)' : 'rgba(255,83,48,.9)'
+      ctx.beginPath()
+      ctx.arc(headX, singerY, 8, 0, 7)
+      ctx.fill()
+      ctx.strokeStyle = onTone ? 'rgba(23,232,160,.25)' : 'rgba(255,83,48,.25)'
+      ctx.lineWidth = 16
+      ctx.beginPath()
+      ctx.moveTo(headX - 46, singerY)
+      ctx.lineTo(headX, singerY)
+      ctx.stroke()
+
+      // live match%
+      const recent = lineAcc.slice(-60)
+      const m = Math.round((recent.reduce((a, b) => a + b, 0) / recent.length) * 100)
+      room().setMatch(m)
+
+      raf = requestAnimationFrame(draw)
+    }
+
+    sizeCanvas()
+    addEventListener('resize', sizeCanvas)
+    startLine()
+    raf = requestAnimationFrame(draw)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      removeEventListener('resize', sizeCanvas)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [song])
+}

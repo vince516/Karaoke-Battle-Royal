@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E0E10">
+<title>Battle Royale — Semifinals Showdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E0E10; --panel:#17171A; --panel2:#1F1F23; --line:#2C2C31;
+  --red:#E10A17; --red-deep:#A50711; --gold:#FFB300;
+  --splat:#FF5330; --bloom:#FF7AA8; --mint:#17E8A0;
+  --txt:#EFEFF1; --mut:#ADADB8; --dim:#77777F;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --glass:rgba(16,16,20,.62);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--ink);color:var(--txt);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:15px;overflow:hidden;overscroll-behavior:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation}
+.num{font-variant-numeric:tabular-nums}
+::-webkit-scrollbar{width:0;height:0}
+.glass{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.09)}
+
+/* ================= FULL-SCREEN STAGE ================= */
+.stage{position:fixed;inset:0;overflow:hidden;
+  background:radial-gradient(130% 100% at 30% 18%, #3a0d1c 0%, #1b0714 46%, #0a040e 100%)}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(60% 45% at 20% 82%, rgba(225,10,23,.32), transparent 60%),
+  radial-gradient(55% 45% at 82% 26%, rgba(23,232,160,.15), transparent 60%)}
+.stage.punch{animation:punch .28s cubic-bezier(.2,1.3,.4,1)}
+@keyframes punch{40%{transform:scale(1.014)}}
+
+/* ================= VIDEOKE / SMULE LAYER ================= */
+.smule{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.2vh;pointer-events:none;padding:0 16px;z-index:2}
+
+/* song chip */
+.songchip{display:inline-flex;align-items:center;gap:11px;border-radius:999px;padding:8px 16px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12)}
+.songchip .duet{background:linear-gradient(90deg,var(--red),var(--bloom));color:#fff;font-size:9px;font-weight:900;letter-spacing:1.4px;padding:3px 9px;border-radius:999px}
+.songchip .snm{font-weight:800;font-size:13px}
+.songchip .sart{font-size:11px;color:var(--mut)}
+.sprog{width:110px;height:4px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden}
+.sprog i{display:block;height:100%;width:0%;background:var(--gold);border-radius:999px;transition:width .5s linear}
+
+/* duet cams */
+.duet{display:flex;gap:3.5vw;align-items:center}
+.cam{position:relative;width:min(30vw,240px);aspect-ratio:3/3.6;border-radius:22px;overflow:hidden;
+  border:2.5px solid rgba(255,255,255,.14);transition:border-color .3s,box-shadow .3s,transform .3s}
+.cam .bg{position:absolute;inset:0}
+.cam.a .bg{background:radial-gradient(120% 100% at 50% 25%,#5a1020,#25060f 70%)}
+.cam.b .bg{background:radial-gradient(120% 100% at 50% 25%,#0c4634,#04160f 70%)}
+.cam .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.cam .face .av{width:34%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:clamp(22px,3.4vw,34px)}
+.cam.a .face .av{background:linear-gradient(135deg,var(--red),#ff5d78)}
+.cam.b .face .av{background:linear-gradient(135deg,#0e8f6b,var(--mint))}
+/* live face feed — photo with handheld-cam sway to feel like video */
+.cam .feed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+  animation:sway 7s ease-in-out infinite alternate;transform-origin:50% 40%;filter:saturate(1.08) contrast(1.05)}
+.cam.b .feed{animation-duration:8.5s;animation-delay:-3s}
+@keyframes sway{0%{transform:scale(1.06) translate(-1.2%,0.6%)}50%{transform:scale(1.1) translate(0.8%,-0.8%)}100%{transform:scale(1.07) translate(-0.5%,1%)}}
+.cam.singing .feed{animation-duration:3.5s;filter:saturate(1.2) contrast(1.1) brightness(1.06)}
+/* webcam grain + vignette so it reads as a stream, not a photo */
+.cam .grain{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,.5) 100%)}
+.cam .grain::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.03);opacity:0;animation:flick 4s steps(2) infinite}
+@keyframes flick{0%,92%{opacity:0}94%{opacity:1}96%{opacity:0}}
+.cam .tag,.cam .viz{z-index:3}
+/* tint wash keyed to performer color */
+.cam .wash{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;opacity:.35}
+.cam.a .wash{background:linear-gradient(160deg,rgba(225,10,23,.5),transparent 55%)}
+.cam.b .wash{background:linear-gradient(160deg,rgba(23,232,160,.4),transparent 55%)}
+.cam .tag{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:800}
+.cam.a .tag{color:#ff8093}.cam.b .tag{color:var(--mint)}
+.cam .micdot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.cam.singing{transform:scale(1.04)}
+.cam.a.singing{border-color:var(--red);box-shadow:0 0 34px rgba(225,10,23,.5)}
+.cam.b.singing{border-color:var(--mint);box-shadow:0 0 34px rgba(23,232,160,.42)}
+.cam.singing .micdot{background:currentColor;animation:blink 1s infinite}
+/* visualizer */
+.viz{position:absolute;right:10px;bottom:10px;display:flex;gap:3px;align-items:flex-end;height:20px;opacity:.25;transition:opacity .3s}
+.cam.singing .viz{opacity:1}
+.viz i{width:4px;border-radius:2px;background:currentColor;height:30%}
+.cam.a .viz i{background:#ff8093}.cam.b .viz i{background:var(--mint)}
+.cam.singing .viz i{animation:vz .5s ease-in-out infinite alternate}
+.viz i:nth-child(1){animation-delay:0s}.viz i:nth-child(2){animation-delay:.12s}.viz i:nth-child(3){animation-delay:.24s}.viz i:nth-child(4){animation-delay:.06s}.viz i:nth-child(5){animation-delay:.18s}
+@keyframes vz{from{height:22%}to{height:100%}}
+.vsflag{font-family:'Archivo';font-weight:900;font-size:clamp(16px,2.4vw,24px);color:rgba(255,255,255,.35)}
+
+/* lyrics — karaoke wipe */
+.lyrics{display:flex;flex-direction:column;align-items:center;gap:1vh;text-align:center;max-width:min(760px,92vw)}
+.lline{position:relative;font-family:'Archivo';font-weight:900;font-size:clamp(21px,3.6vw,36px);line-height:1.18;letter-spacing:.4px;white-space:normal}
+.lline .base{color:rgba(255,255,255,.34)}
+.lline .fill{position:absolute;inset:0;overflow:hidden;width:0%;white-space:nowrap;text-shadow:0 0 24px currentColor}
+.lline.partA .fill{color:#ff97a5}
+.lline.partB .fill{color:var(--mint)}
+.lline.partX .fill{color:var(--gold)}
+.lnext{font-weight:700;font-size:clamp(13px,1.8vw,17px);color:rgba(255,255,255,.4)}
+.partpill{font-size:9.5px;font-weight:900;letter-spacing:1.6px;border-radius:999px;padding:4px 12px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12)}
+.partpill.pA{color:#ff8093}.partpill.pB{color:var(--mint)}.partpill.pX{color:var(--gold)}
+
+/* projectiles + stamps */
+.proj{position:absolute;font-size:52px;z-index:20;pointer-events:none;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
+.stamp{position:absolute;z-index:21;font-family:'Archivo';font-weight:900;padding:12px 24px;border-radius:16px;transform:rotate(-8deg) scale(.3);opacity:0;
+  animation:stampIn 2s cubic-bezier(.2,1.6,.4,1) forwards;pointer-events:none;letter-spacing:1px;font-size:clamp(22px,3.4vw,34px)}
+@keyframes stampIn{12%{transform:rotate(-8deg) scale(1.35);opacity:1}24%{transform:rotate(-8deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:rotate(-8deg) scale(1) translateY(-22px)}}
+.stamp.splat{background:var(--splat);color:#2a0c02}
+.stamp.bloom{background:var(--bloom);color:#40001a}
+.stamp.gift{background:var(--gold);color:#3a2800}
+.splatmark{position:absolute;z-index:19;font-size:66px;opacity:0;animation:markIn 2.4s ease forwards;pointer-events:none}
+@keyframes markIn{8%{opacity:1;transform:scale(1.45)}22%{transform:scale(1)}80%{opacity:.9}100%{opacity:0}}
+
+/* prize pool */
+.poolfloat{position:fixed;left:50%;bottom:calc(128px + var(--sab));transform:translateX(-50%);z-index:12;text-align:center;pointer-events:none;transition:bottom .35s cubic-bezier(.2,1,.4,1)}
+.ui-hidden .poolfloat{bottom:calc(22px + var(--sab))}
+.poolfloat .lab{font-size:9.5px;letter-spacing:3.2px;font-weight:900;color:var(--gold);opacity:.92}
+.poolfloat .amt{font-family:'Archivo';font-weight:900;font-size:clamp(30px,4.4vw,44px);color:var(--gold);line-height:1.02;
+  text-shadow:0 0 40px rgba(255,179,0,.5);transition:transform .18s cubic-bezier(.2,1.6,.4,1)}
+.poolfloat .amt.zoom{transform:scale(1.15)}
+
+/* hype rail */
+.hype{position:fixed;right:10px;top:50%;transform:translateY(-50%);height:32vh;width:8px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);overflow:hidden;z-index:12}
+.hype .fill{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(180deg,var(--gold),var(--red));transition:height .5s cubic-bezier(.2,.9,.3,1.3)}
+
+/* ================= AUTO-HIDE UI ================= */
+.ui{transition:opacity .35s ease,transform .35s cubic-bezier(.2,1,.4,1)}
+.ui-hidden .ui.topbar{opacity:0;transform:translateY(-14px);pointer-events:none}
+.ui-hidden .ui.dock{opacity:0;transform:translateX(-50%) translateY(18px);pointer-events:none}
+.ui-hidden .ui.scoreline{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none}
+/* stage breathes when controls hide */
+.smule{transition:transform .4s cubic-bezier(.2,1,.4,1)}
+body:not(.ui-hidden) .smule{transform:translateY(-3vh) scale(.97)}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;gap:12px;
+  padding:calc(12px + var(--sat)) 18px 12px;
+  background:linear-gradient(180deg,rgba(10,10,12,.75),transparent)}
+.brand{font-family:'Archivo';font-weight:900;font-size:17px;white-space:nowrap}
+.brand b{color:var(--red)}
+.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-weight:800;font-size:10.5px;letter-spacing:1.4px;padding:5px 12px;border-radius:999px;flex:none}
+.live-pill i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+.ttl{font-weight:700;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .meta{margin-left:auto;display:flex;gap:9px;align-items:center}
+.chip{border-radius:999px;padding:7px 13px;display:inline-flex;gap:7px;align-items:center;font-size:13px;font-weight:700;white-space:nowrap}
+.wallet{color:var(--gold)}
+.iconbtn{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex:none;transition:transform .12s,background .15s}
+.iconbtn:active{transform:scale(.9)}
+.iconbtn.on{background:var(--red);border-color:var(--red)}
+
+.scoreline{position:fixed;left:50%;bottom:calc(96px + var(--sab));transform:translateX(-50%);z-index:28;width:min(560px,calc(100% - 32px));border-radius:999px;padding:8px 14px;display:flex;align-items:center;gap:12px}
+.sc-name{font-weight:800;font-size:12.5px;white-space:nowrap}
+.sc-name.a{color:#ff8093}.sc-name.b{color:var(--mint)}
+.votebar{flex:1;height:8px;border-radius:999px;overflow:hidden;display:flex;background:rgba(255,255,255,.1)}
+.votebar .a{background:linear-gradient(90deg,var(--red-deep),var(--red));transition:width .6s}
+.votebar .b{background:linear-gradient(90deg,var(--mint),#0e8f6b);flex:1}
+.sc-pct{font-size:11.5px;color:var(--mut);font-weight:700;white-space:nowrap}
+
+/* ================= CALL DOCK ================= */
+.dock{position:fixed;left:50%;bottom:calc(18px + var(--sab));transform:translateX(-50%);z-index:30;
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;max-width:calc(100% - 20px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.call{position:relative;width:56px;height:56px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);transition:transform .12s,background .15s,box-shadow .15s}
+.call:hover{background:rgba(255,255,255,.15)}
+.call:active{transform:scale(.88)}
+.call .lb{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;letter-spacing:.4px;color:var(--mut);white-space:nowrap}
+.call .cost{position:absolute;top:-7px;right:-4px;background:var(--gold);color:#3a2800;font-size:9px;font-weight:900;border-radius:999px;padding:2px 6px}
+.call.tomato{box-shadow:0 0 18px rgba(255,83,48,.25);border-color:rgba(255,83,48,.55)}
+.call.flowers{box-shadow:0 0 18px rgba(255,122,168,.25);border-color:rgba(255,122,168,.55)}
+.call.votea{background:var(--red);border-color:var(--red);font-family:'Archivo';font-weight:900;font-size:20px;color:#fff}
+.call.voteb{background:var(--mint);border-color:var(--mint);font-family:'Archivo';font-weight:900;font-size:20px;color:#03301f}
+.call.cooling{pointer-events:none}
+.call.cooling .em{opacity:.3}
+.ring{position:absolute;inset:-4px;pointer-events:none}
+.ring svg{width:64px;height:64px;transform:rotate(-90deg)}
+.ring .track{stroke:rgba(255,255,255,.12);fill:none;stroke-width:3}
+.ring .bar{stroke:var(--gold);fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.ring .sec{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--gold);font-family:'Archivo'}
+.divider{width:1px;height:34px;background:rgba(255,255,255,.14);flex:none}
+
+.aimwrap{position:fixed;left:50%;bottom:calc(96px + var(--sab));transform:translateX(-50%);z-index:29;display:none;gap:8px;border-radius:999px;padding:7px 10px;align-items:center;font-size:12px;color:var(--mut)}
+.aimwrap.show{display:flex}
+.tt{padding:6px 15px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-weight:800;font-size:12.5px;color:var(--mut);transition:all .15s}
+.tt.on-a{background:rgba(225,10,23,.25);border-color:var(--red);color:#ff9aa8}
+.tt.on-b{background:rgba(23,232,160,.18);border-color:var(--mint);color:var(--mint)}
+
+/* ================= CHAT DRAWER ================= */
+.chat{position:fixed;top:0;right:0;bottom:0;width:min(340px,88vw);z-index:40;display:flex;flex-direction:column;
+  background:rgba(14,14,17,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.09);
+  transform:translateX(105%);transition:transform .38s cubic-bezier(.2,1,.3,1)}
+.chat.open{transform:translateX(0)}
+.chathd{padding:calc(14px + var(--sat)) 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center}
+.chathd b{font-size:14px}
+.chathd button{font-size:20px;color:var(--mut);width:34px;height:34px}
+.msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.m{font-size:13px;line-height:1.5;word-wrap:break-word}
+.m .u{font-weight:700}
+.m.sys{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;font-weight:600;animation:msgin .25s ease}
+@keyframes msgin{from{transform:translateY(6px) scale(.97);opacity:0}}
+.m.sys.tomato{border-color:rgba(255,83,48,.5);color:#ffb2a2}
+.m.sys.flower{border-color:rgba(255,122,168,.5);color:#ffc4d8}
+.m.sys.gold{border-color:rgba(255,179,0,.5);color:var(--gold)}
+.m.sys.slot{border-color:rgba(23,232,160,.45);color:var(--mint)}
+.chatin{padding:10px 14px calc(12px + var(--sab));border-top:1px solid rgba(255,255,255,.08);display:flex;gap:9px}
+.chatin input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:12px 14px;color:var(--txt);font-family:inherit;font-size:14px;outline:none;min-width:0}
+.chatin input:focus{border-color:var(--red)}
+.chatin button{background:var(--red);color:#fff;font-weight:800;border-radius:11px;padding:0 18px;font-size:14px}
+
+.bubbles{position:fixed;right:14px;bottom:calc(110px + var(--sab));z-index:11;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none;max-width:64vw}
+.bub{background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--mut);animation:bublife 5s ease forwards;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bub .u{font-weight:800}
+@keyframes bublife{0%{opacity:0;transform:translateY(10px)}8%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+
+/* ================= SHEET ================= */
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.veil.open{display:flex}
+.sheet{width:min(520px,100%);background:rgba(20,20,24,.96);border:1px solid rgba(255,255,255,.1);border-radius:24px 24px 0 0;padding:22px 20px calc(22px + var(--sab));max-height:82dvh;overflow-y:auto;animation:sheetUp .32s cubic-bezier(.2,1,.4,1)}
+@keyframes sheetUp{from{transform:translateY(70px);opacity:0}}
+.sheet h3{font-family:'Archivo';font-weight:900;font-size:17px;letter-spacing:.4px}
+.sheet .sub{color:var(--mut);font-size:12.5px;margin:5px 0 16px;line-height:1.5}
+.rail{display:flex;gap:16px;overflow-x:auto;padding:8px 2px 14px;-webkit-overflow-scrolling:touch}
+.head{flex:none;width:72px;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;transition:transform .15s}
+.head:active{transform:scale(.93)}
+.hava{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:22px;position:relative}
+.head.onstage .hava{box-shadow:0 0 0 3px var(--red),0 0 20px rgba(225,10,23,.45)}
+.head.onstage::before{content:"LIVE";position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:2;background:var(--red);color:#fff;font-size:8px;font-weight:900;letter-spacing:1px;padding:2px 8px;border-radius:999px}
+.head .hn{font-size:10.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.head .hl{font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.4px}
+.head.empty .hava{background:none;border:2px dashed rgba(255,255,255,.2);color:var(--dim);font-size:26px;transition:all .15s}
+.head.empty:active .hava,.head.empty:hover .hava{border-color:var(--gold);color:var(--gold)}
+.head.empty .hn{color:var(--gold)}
+.head.justfilled .hava{animation:pop .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+.crowdpick{display:inline-flex;gap:8px;align-items:center;background:rgba(255,179,0,.12);border:1px solid rgba(255,179,0,.5);color:var(--gold);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:800;margin-bottom:6px}
+.nom{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);margin-bottom:10px}
+.nom.topn{border-color:rgba(255,179,0,.55);background:rgba(255,179,0,.07)}
+.nom .na{width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:15px}
+.nom .ni{flex:1;min-width:0}
+.nom .nn{font-weight:700;font-size:13.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{font-size:9px;font-weight:900;letter-spacing:.7px;background:var(--gold);color:#3a2800;padding:2px 8px;border-radius:999px}
+.nom .nl{font-size:11px;color:var(--mut);margin-top:2px}
+.likebtn{display:inline-flex;gap:5px;align-items:center;border:1.5px solid rgba(255,255,255,.14);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;color:var(--mut);transition:all .12s;flex:none}
+.likebtn.liked{border-color:var(--red);color:#ff8093;background:rgba(225,10,23,.15);transform:scale(1.06)}
+.pickbtn{background:var(--red);color:#fff;font-weight:800;font-size:12.5px;border-radius:11px;padding:10px 14px;flex:none}
+.sheet .close{width:100%;margin-top:8px;padding:13px;border-radius:13px;border:1px solid rgba(255,255,255,.12);color:var(--mut);font-weight:700;font-size:14px}
+
+.toast{position:fixed;left:50%;top:calc(70px + var(--sat));transform:translateX(-50%) translateY(-90px);background:rgba(20,20,24,.92);border:1px solid var(--gold);color:var(--gold);font-weight:700;font-size:13px;border-radius:999px;padding:11px 19px;z-index:99;transition:transform .3s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(10px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:640px){
+  .ttl{display:none}
+  .brand span.word{display:none}
+  .call{width:52px;height:52px;font-size:24px}
+  .hype{right:6px}
+  .duet{gap:4vw}
+  .cam{width:min(38vw,180px)}
+  .songchip .sart{display:none}
+  .sprog{width:70px}
+}
+@media(max-height:640px){
+  .cam{width:min(24vw,150px)}
+  .smule{gap:2vh}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+
+/* ================= SINGER VIEW ================= */
+body.singer .smule{display:none}
+body.singer .dock.audience{display:none}
+body:not(.singer) .dock.singerdock{display:none}
+body:not(.singer) .singerlayer{display:none}
+body:not(.singer) .pip{display:none}
+body.singer .aimwrap{display:none!important}
+
+.singerlayer{position:absolute;inset:0;z-index:2}
+.selffeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1) scale(1.04);
+  animation:selfsway 9s ease-in-out infinite alternate;filter:saturate(1.1) contrast(1.06)}
+@keyframes selfsway{0%{transform:scaleX(-1) scale(1.04) translate(-.6%,.4%)}100%{transform:scaleX(-1) scale(1.08) translate(.6%,-.5%)}}
+body.camoff .selffeed{display:none}
+.selfgrain{position:absolute;inset:0;pointer-events:none;background:
+  repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
+  radial-gradient(130% 110% at 50% 40%, transparent 50%, rgba(0,0,0,.62) 100%)}
+.camoffmsg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--dim);font-weight:800;letter-spacing:2px;font-size:12px}
+.camoffmsg .big{font-size:44px}
+body.camoff .camoffmsg{display:flex}
+
+/* singer lyrics — big, low center */
+.singlyr{position:absolute;left:50%;bottom:calc(150px + var(--sab));transform:translateX(-50%);width:min(820px,94vw);
+  display:flex;flex-direction:column;align-items:center;gap:1vh;text-align:center;z-index:4;transition:bottom .35s cubic-bezier(.2,1,.4,1)}
+.ui-hidden .singlyr{bottom:calc(64px + var(--sab))}
+.singlyr .lline{font-size:clamp(26px,4.6vw,46px);text-shadow:0 2px 20px rgba(0,0,0,.7)}
+.readydots{display:none;gap:8px}
+.readydots.show{display:flex}
+.readydots i{width:10px;height:10px;border-radius:50%;background:var(--gold);animation:dotpulse 1s infinite}
+.readydots i:nth-child(2){animation-delay:.2s}.readydots i:nth-child(3){animation-delay:.4s}
+@keyframes dotpulse{50%{opacity:.25;transform:scale(.7)}}
+.yourpart{background:var(--gold)!important;color:#3a2800!important;border-color:var(--gold)!important;animation:ypulse 1.2s infinite}
+@keyframes ypulse{50%{box-shadow:0 0 22px rgba(255,179,0,.7)}}
+
+/* opponent PiP */
+.pip{position:fixed;top:calc(74px + var(--sat));right:14px;width:min(26vw,132px);aspect-ratio:3/3.8;border-radius:16px;overflow:hidden;z-index:26;
+  border:2px solid rgba(255,255,255,.16);transition:border-color .3s,box-shadow .3s}
+.pip img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05)}
+.pip .ptag{position:absolute;left:7px;bottom:7px;background:rgba(0,0,0,.6);border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;color:var(--mint)}
+.pip.singing{border-color:var(--mint);box-shadow:0 0 24px rgba(23,232,160,.5)}
+
+/* incoming gift banner */
+.inbanner{position:fixed;top:calc(74px + var(--sat));left:50%;transform:translateX(-50%) translateY(-16px);opacity:0;z-index:27;
+  display:flex;gap:9px;align-items:center;border-radius:999px;padding:9px 18px;font-weight:800;font-size:13.5px;
+  background:rgba(20,20,24,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);pointer-events:none;
+  transition:opacity .3s,transform .3s}
+.inbanner.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.inbanner .em{font-size:20px}
+.inbanner.good{border-color:rgba(255,122,168,.6)}
+.inbanner.bad{border-color:rgba(255,83,48,.6)}
+.inbanner.gold{border-color:rgba(255,179,0,.6);color:var(--gold)}
+
+/* singer dock buttons */
+.call.mute.off{background:var(--red);border-color:var(--red)}
+.call.leave{background:var(--red);border-color:var(--red);font-size:24px}
+
+/* ================= SWIPE PAGER (arena ⟷ singer FPV) ================= */
+body.singer .singerlayer{animation:slideInR .38s cubic-bezier(.2,1,.4,1)}
+body:not(.singer) .smule{animation:slideInL .38s cubic-bezier(.2,1,.4,1)}
+@keyframes slideInR{from{transform:translateX(9vw);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideInL{from{transform:translateX(-9vw) translateY(-3vh) scale(.97);opacity:0}}
+.pagedots{position:fixed;left:50%;top:calc(58px + var(--sat));transform:translateX(-50%);z-index:26;display:flex;gap:14px;align-items:center}
+.pagedots .pd{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:900;letter-spacing:1.4px;color:var(--dim);transition:color .3s}
+.pagedots .pd i{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:all .3s}
+.pagedots .pd.on{color:var(--txt)}
+.pagedots .pd.on i{background:var(--red);width:18px;border-radius:999px}
+.ui-hidden .pagedots{opacity:0;pointer-events:none;transition:opacity .35s}
+.pagedots{transition:opacity .35s}
+.swipehint{position:fixed;left:50%;bottom:calc(200px + var(--sab));transform:translateX(-50%);z-index:25;
+  font-size:12px;font-weight:800;letter-spacing:1px;color:var(--mut);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 16px;pointer-events:none;
+  animation:hintlife 6s ease forwards}
+@keyframes hintlife{0%,10%{opacity:0;transform:translateX(-50%) translateY(8px)}20%,80%{opacity:1;transform:translateX(-50%)}100%{opacity:0}}
+
+
+/* ================= UP NEXT CHIP + QUEUE ================= */
+.upnext{position:fixed;top:calc(72px + var(--sat));left:16px;z-index:26;display:flex;align-items:center;gap:10px;
+  border-radius:999px;padding:8px 15px;max-width:min(72vw,420px)}
+.ui-hidden .upnext{opacity:0;transform:translateY(-10px);pointer-events:none}
+.upnext .un-lab{font-size:9px;font-weight:900;letter-spacing:1.6px;color:var(--gold);flex:none}
+.upnext .un-av{width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:12px}
+.upnext .un-tx{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upnext .un-tx i{font-style:normal;color:var(--mut);font-weight:600}
+
+.qlist{display:flex;flex-direction:column;gap:8px;margin:6px 0 14px}
+.qrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04)}
+.qrow.now{border-color:rgba(225,10,23,.55);background:rgba(225,10,23,.08)}
+.qrow.next{border-color:rgba(255,179,0,.5);background:rgba(255,179,0,.06)}
+.qrow .qn{font-family:'Archivo';font-weight:900;font-size:13px;color:var(--dim);width:20px;text-align:center;flex:none}
+.qrow .qa{width:36px;height:36px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Archivo';font-weight:900;font-size:13px}
+.qrow .qi{flex:1;min-width:0}
+.qrow .qname{font-weight:800;font-size:13px}
+.qrow .qsong{font-size:11.5px;color:var(--mut);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qrow .qsong b{color:var(--gold);font-weight:700}
+.qbadge{font-size:8.5px;font-weight:900;letter-spacing:.8px;border-radius:999px;padding:3px 9px;flex:none}
+.qbadge.now{background:var(--red);color:#fff}
+.qbadge.next{background:var(--gold);color:#3a2800}
+.qbadge.open{border:1px dashed rgba(255,255,255,.25);color:var(--dim)}
+.qrow.openrow{border-style:dashed;cursor:pointer}
+.qrow.openrow:hover{border-color:var(--gold)}
+.qrow.openrow .qa{border:2px dashed rgba(255,255,255,.2);background:none;color:var(--dim)}
+
+
+</style>
+</head>
+<body>
+
+<!-- FULL-SCREEN STAGE -->
+<div class="stage" id="stage">
+  <!-- SMULE-STYLE VIDEOKE LAYER -->
+  <div class="smule">
+    <div class="songchip">
+      <span class="duet">DUET</span>
+      <span><span class="snm">Gravity of You</span> <span class="sart">· Battle Royale Originals</span></span>
+      <span class="sprog"><i id="sprog"></i></span>
+    </div>
+    <div class="duet">
+      <div class="cam a" id="camA"><div class="bg"></div><div class="face"><div class="av">N</div></div>
+        <img class="feed" src="https://randomuser.me/api/portraits/women/68.jpg" alt="" onerror="this.remove()">
+        <div class="wash"></div><div class="grain"></div>
+        <div class="tag"><span class="micdot"></span>Nova Vega</div>
+        <div class="viz"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="vsflag">VS</div>
+      <div class="cam b" id="camB"><div class="bg"></div><div class="face"><div class="av">E</div></div>
+        <img class="feed" src="https://randomuser.me/api/portraits/men/32.jpg" alt="" onerror="this.remove()">
+        <div class="wash"></div><div class="grain"></div>
+        <div class="tag"><span class="micdot"></span>Echo Rae</div>
+        <div class="viz"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div class="lyrics">
+      <span class="partpill pA" id="partpill">NOVA'S PART</span>
+      <div class="lline partA" id="lline"><span class="base" id="lbase">City lights are calling out my name</span><span class="fill" id="lfill">City lights are calling out my name</span></div>
+      <div class="lnext" id="lnext">Every echo pulls me to your flame</div>
+    </div>
+  </div>
+
+  <!-- SINGER VIEW LAYER (you are Nova Vega) -->
+  <div class="singerlayer">
+    <img class="selffeed" src="https://randomuser.me/api/portraits/women/68.jpg" alt="" onerror="this.remove()">
+    <div class="selfgrain"></div>
+    <div class="camoffmsg"><span class="big">📷</span>CAMERA OFF — AUDIO ONLY</div>
+    <div class="singlyr">
+      <span class="readydots" id="readydots"><i></i><i></i><i></i></span>
+      <span class="partpill pA" id="s_pill">YOUR PART</span>
+      <div class="lline partA" id="s_lline"><span class="base" id="s_base"></span><span class="fill" id="s_fill"></span></div>
+      <div class="lnext" id="s_next"></div>
+    </div>
+  </div>
+</div>
+
+<!-- opponent PiP (singer view) -->
+<div class="pip" id="pip">
+  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="" onerror="this.style.display='none'">
+  <span class="ptag">Echo Rae</span>
+</div>
+
+<!-- incoming gift banner (singer view) -->
+<div class="inbanner" id="inbanner"><span class="em" id="ib_em">💐</span><span id="ib_tx"></span></div>
+
+<!-- UP NEXT chip (both views, auto-hides) -->
+<button class="ui upnext glass" id="upnext" onclick="act(openLineup,event)">
+  <span class="un-lab">UP NEXT</span>
+  <span class="un-av" id="un_av" style="background:linear-gradient(135deg,#7b2ff7,#b98cff)">J</span>
+  <span class="un-tx" id="un_tx">Jax Motion <i>· 🎵 “Midnight Run”</i></span>
+</button>
+
+<!-- page dots: ARENA ⟷ MY CAM -->
+<div class="pagedots" id="pagedots">
+  <span class="pd on" id="pdArena"><i></i>ARENA</span>
+  <span class="pd" id="pdSinger"><i></i>MY CAM</span>
+</div>
+<div class="swipehint" id="swipehint">⟵ swipe · videoke arena&nbsp;&nbsp;|&nbsp;&nbsp;my cam · swipe ⟶</div>
+
+<!-- always-on ambient -->
+<div class="poolfloat"><div class="lab">LIVE PRIZE POOL</div><div class="amt num" id="pool">95,677</div></div>
+<div class="hype"><div class="fill" id="hypeFill"></div></div>
+<div class="bubbles" id="bubbles"></div>
+
+<!-- TOP BAR -->
+<header class="ui topbar" id="topbar">
+  <div class="brand">✕ B<span class="word">attle </span><b>R<span class="word">oyale</span></b></div>
+  <span class="live-pill"><i></i>LIVE</span>
+  <span class="ttl">Semifinals Showdown · <span class="num" id="clock">02:41</span></span>
+  <div class="meta">
+    <span class="chip glass">👀 <b class="num" id="viewers">1,284</b></span>
+    <span class="chip glass wallet">🪙 <span class="num" id="wallet">1,250</span></span>
+    <button class="iconbtn glass" id="viewBtn" onclick="toggleView(event)" aria-label="Switch view">🎤</button>
+    <button class="iconbtn glass" id="chatBtn" onclick="toggleChat(event)" aria-label="Toggle chat">💬</button>
+  </div>
+</header>
+
+<!-- SCORE LINE -->
+<div class="ui scoreline glass" id="scoreline">
+  <span class="sc-name a">Nova Vega</span>
+  <span class="sc-pct num"><span id="pctA">50</span>%</span>
+  <div class="votebar"><div class="a" id="barA" style="width:50%"></div><div class="b"></div></div>
+  <span class="sc-pct num"><span id="pctB">50</span>%</span>
+  <span class="sc-name b">Echo Rae</span>
+</div>
+
+<!-- AIM BUBBLE -->
+<div class="aimwrap glass" id="aimwrap">Aim
+  <button class="tt on-a" id="ttA" onclick="setTarget('A',event)">Nova</button>
+  <button class="tt" id="ttB" onclick="setTarget('B',event)">Echo</button>
+</div>
+
+<!-- CALL DOCK -->
+<nav class="ui dock audience glass" id="dock">
+  <button class="call votea" onclick="act(()=>vote('A'),event)">N<span class="lb">VOTE</span></button>
+  <div class="divider"></div>
+  <button class="call tomato" id="gTomato" onclick="act(()=>launch('tomato'),event)">
+    <span class="em">🍅</span><span class="lb">TOMATO</span>
+    <span class="ring" id="rTomato" hidden><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="28"/><circle class="bar" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/></svg><span class="sec num">30</span></span>
+  </button>
+  <button class="call flowers" id="gFlowers" onclick="act(()=>launch('flowers'),event)">
+    <span class="em">💐</span><span class="lb">FLOWERS</span>
+    <span class="ring" id="rFlowers" hidden><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="28"/><circle class="bar" cx="32" cy="32" r="28" stroke-dasharray="175.9" stroke-dashoffset="0"/></svg><span class="sec num">30</span></span>
+  </button>
+  <button class="call" onclick="act(()=>launch('rose'),event)"><span class="em">🌹</span><span class="cost num">10</span><span class="lb">ROSE</span></button>
+  <button class="call" onclick="act(()=>launch('mic'),event)"><span class="em">🎤</span><span class="cost num">50</span><span class="lb">MIC DROP</span></button>
+  <button class="call" onclick="act(()=>launch('storm'),event)"><span class="em">💞</span><span class="cost num">100</span><span class="lb">STORM</span></button>
+  <button class="call" onclick="act(()=>launch('crown'),event)"><span class="em">👑</span><span class="cost num">250</span><span class="lb">CROWN</span></button>
+  <div class="divider"></div>
+  <button class="call" onclick="act(openLineup,event)"><span class="em">👥</span><span class="lb">QUEUE</span></button>
+  <div class="divider"></div>
+  <button class="call voteb" onclick="act(()=>vote('B'),event)">E<span class="lb">VOTE</span></button>
+</nav>
+
+<!-- SINGER DOCK (video-call controls) -->
+<nav class="ui dock singerdock glass" id="sdock">
+  <button class="call mute" id="muteBtn" onclick="act(toggleMute,event)"><span class="em">🎙️</span><span class="lb">MIC</span></button>
+  <button class="call" id="camBtn" onclick="act(toggleCam,event)"><span class="em">📷</span><span class="lb">CAMERA</span></button>
+  <div class="divider"></div>
+  <button class="call" onclick="act(()=>fxBurst('✨'),event)"><span class="em">✨</span><span class="lb">SPARKLE</span></button>
+  <button class="call" onclick="act(()=>fxBurst('🔥'),event)"><span class="em">🔥</span><span class="lb">FIRE</span></button>
+  <div class="divider"></div>
+  <button class="call" onclick="act(openLineup,event)"><span class="em">👥</span><span class="lb">QUEUE</span></button>
+  <div class="divider"></div>
+  <button class="call leave" onclick="act(()=>toast('Demo: this ends your set and calls the next slot'),event)"><span class="em">📵</span><span class="lb">END SET</span></button>
+</nav>
+
+<!-- CHAT DRAWER -->
+<aside class="chat" id="chat">
+  <div class="chathd"><b>Live chat · <span class="num" id="msgcount">62</span></b><button onclick="toggleChat(event)" aria-label="Close chat">✕</button></div>
+  <div class="msgs" id="msgs"></div>
+  <div class="chatin">
+    <input id="chatInput" placeholder="Send a message" maxlength="120" autocomplete="off">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</aside>
+
+<!-- LINEUP SHEET -->
+<div class="veil" id="veil" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <div id="lineupView">
+      <h3>Singing order · <span class="num" id="filledCount">6</span>/10 slots</h3>
+      <p class="sub">Tonight's queue with each performer's chosen videoke song. Tap an open slot to nominate — the crowd pick auto-fills when the room agrees.</p>
+      <div class="rail" id="rail"></div>
+      <div class="qlist" id="qlist"></div>
+      <button class="crowdpick" id="crowdpick" onclick="fastFill()">⚡ Fast-fill crowd pick: <b id="cpName">@LunaKeys</b></button>
+    </div>
+    <div id="nomView" hidden>
+      <h3>Nominate for slot <span id="slotNo" class="num">7</span></h3>
+      <p class="sub">Ranked by crowd likes — like to push someone up.</p>
+      <div id="nomList"></div>
+    </div>
+    <button class="close" onclick="closeSheet()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- state ---------------- */
+let wallet=1250, pool=95677, viewers=1284, hype=38, target='A';
+let scoreA=87598, scoreB=87130, msgCount=62, pendingSlot=null, chatOpen=false;
+const COST={tomato:0,flowers:0,rose:10,mic:50,storm:100,crown:250};
+const ICON={tomato:'🍅',flowers:'💐',rose:'🌹',mic:'🎤',storm:'💞',crown:'👑'};
+
+const roster=[
+ {name:'Nova Vega',ini:'N',lik:'Song',on:true,song:'Gravity of You',hue:'linear-gradient(135deg,#E10A17,#ff5d78)'},
+ {name:'Echo Rae',ini:'E',lik:'Song',on:true,song:'Gravity of You',hue:'linear-gradient(135deg,#0e8f6b,#17E8A0)'},
+ {name:'Jax Motion',ini:'J',lik:'Dance',song:'Midnight Run',hue:'linear-gradient(135deg,#7b2ff7,#b98cff)'},
+ {name:'Rio Falls',ini:'R',lik:'Song',song:'Paper Crowns',hue:'linear-gradient(135deg,#c76b00,#FFB300)'},
+ {name:'Kea Volt',ini:'K',lik:'Dance',song:'Static Bloom',hue:'linear-gradient(135deg,#0a6fb0,#5ecbff)'},
+ {name:'Mars Uno',ini:'M',lik:'Song',song:'Last Train Home',hue:'linear-gradient(135deg,#a30a5e,#ff6fb0)'},
+ null,null,null,null
+];
+let nominees=[
+ {name:'@LunaKeys',ini:'L',likes:342,tag:'Song · R&B runs',song:'Velvet Hours',liked:false,hue:'linear-gradient(135deg,#7b2ff7,#b98cff)'},
+ {name:'@BeatBoxBen',ini:'B',likes:288,tag:'Song · Beatbox',song:'Drum Machine Heart',liked:false,hue:'linear-gradient(135deg,#0a6fb0,#5ecbff)'},
+ {name:'@SableSpin',ini:'S',likes:204,tag:'Dance · Breaking',song:'Concrete Waves',liked:false,hue:'linear-gradient(135deg,#c76b00,#FFB300)'},
+ {name:'@VoxVelvet',ini:'V',likes:151,tag:'Song · Ballads',song:'Slow Gold',liked:false,hue:'linear-gradient(135deg,#a30a5e,#ff6fb0)'},
+ {name:'@KiloSteps',ini:'K',likes:97,tag:'Dance · Shuffle',song:'Four AM Floor',liked:false,hue:'linear-gradient(135deg,#0e8f6b,#17E8A0)'}
+];
+
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+
+/* ---------------- VIDEOKE ENGINE (original song, Smule-style) ---------------- */
+const song=[
+ {p:'A', t:'City lights are calling out my name', d:3600},
+ {p:'B', t:'Every echo pulls me to your flame', d:3600},
+ {p:'A', t:"I've been falling faster than the rain", d:3600},
+ {p:'B', t:"Say the word and I'll be yours again", d:3800},
+ {p:'X', t:"We're caught in the gravity of you", d:3400},
+ {p:'X', t:'Spinning through a sky of neon blue', d:3400},
+ {p:'A', t:'Hold the note and never let it land', d:3600},
+ {p:'B', t:'Turn the crowd to fire with your hand', d:3600},
+ {p:'X', t:'Gravity, gravity of you', d:3200},
+ {p:'X', t:'One more chorus, sing it like we do', d:3800},
+ {p:'A', t:'If the stage is burning, let it burn', d:3600},
+ {p:'B', t:'Every spotlight waiting for its turn', d:3600},
+ {p:'X', t:"We're caught in the gravity of you", d:4200}
+];
+const totalDur=song.reduce((s,l)=>s+l.d,0);
+let li=0, elapsed=0;
+function playLine(){
+  const L=song[li], next=song[(li+1)%song.length];
+  const line=$('lline'), base=$('lbase'), fill=$('lfill'), pill=$('partpill');
+  line.className='lline part'+L.p;
+  base.textContent=L.t; fill.textContent=L.t;
+  $('lnext').textContent=next.t;
+  pill.className='partpill p'+L.p;
+  pill.textContent=L.p==='A'?"NOVA'S PART":L.p==='B'?"ECHO'S PART":'TOGETHER';
+  /* karaoke wipe */
+  fill.style.transition='none'; fill.style.width='0%';
+  void fill.offsetWidth;
+  fill.style.transition=`width ${L.d}ms linear`; fill.style.width='100%';
+  /* singer glow */
+  $('camA').classList.toggle('singing',L.p==='A'||L.p==='X');
+  $('camB').classList.toggle('singing',L.p==='B'||L.p==='X');
+  /* ---- singer view (you are A / Nova) ---- */
+  const sPill=$('s_pill'), sLine=$('s_lline'), sBase=$('s_base'), sFill=$('s_fill');
+  sLine.className='lline part'+L.p;
+  sBase.textContent=L.t; sFill.textContent=L.t;
+  $('s_next').textContent=next.t;
+  sPill.className='partpill p'+L.p+((L.p==='A'||L.p==='X')?' yourpart':'');
+  sPill.textContent=L.p==='A'?'🎤 YOUR PART':L.p==='B'?"ECHO'S PART — REST":'🎤 SING TOGETHER';
+  sFill.style.transition='none'; sFill.style.width='0%';
+  void sFill.offsetWidth;
+  sFill.style.transition=`width ${L.d}ms linear`; sFill.style.width='100%';
+  /* get-ready dots when your part is next but not now */
+  $('readydots').classList.toggle('show', L.p==='B' && (next.p==='A'||next.p==='X'));
+  /* PiP glow when opponent sings */
+  $('pip').classList.toggle('singing',L.p==='B'||L.p==='X');
+  /* progress */
+  $('sprog').style.width=Math.round(elapsed/totalDur*100)+'%';
+  elapsed+=L.d;
+  setTimeout(()=>{
+    li=(li+1)%song.length;
+    if(li===0){ elapsed=0; bumpHype(8); sysMsg('🎵 "Gravity of You" — running it back for the crowd','gold'); }
+    playLine();
+  },L.d);
+}
+playLine();
+
+/* ---------------- singer view controls ---------------- */
+let muted=false;
+function setView(singer){
+  const was=document.body.classList.contains('singer');
+  if(was===singer) return;
+  document.body.classList.toggle('singer',singer);
+  $('viewBtn').textContent=singer?'👀':'🎤';
+  $('pdArena').classList.toggle('on',!singer);
+  $('pdSinger').classList.toggle('on',singer);
+  toast(singer?'My cam — first-person singer view':'Videoke arena');
+  showUI();
+}
+function toggleView(e){
+  if(e)e.stopPropagation();
+  setView(!document.body.classList.contains('singer'));
+}
+/* swipe pager: left → videoke arena, right → my cam (FPV) */
+let swX=null, swY=null, swT=0;
+function swipeStart(x,y){ swX=x; swY=y; swT=Date.now(); }
+function swipeEnd(x,y,fromEl){
+  if(swX===null) return;
+  const dx=x-swX, dy=y-swY; swX=null;
+  if(Date.now()-swT>700) return;                       /* too slow = scroll, not swipe */
+  if(Math.abs(dx)<64 || Math.abs(dx)<Math.abs(dy)*1.4) return;
+  if(fromEl && fromEl.closest('.chat,.sheet,.dock,.msgs,.veil')) return; /* don't hijack scrollers */
+  if(dx<0) setView(false);   /* swipe LEFT  → videoke arena */
+  else     setView(true);    /* swipe RIGHT → my cam / person view */
+  swiped=true; setTimeout(()=>swiped=false,350);
+}
+let swiped=false;
+document.addEventListener('touchstart',e=>swipeStart(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+document.addEventListener('touchend',e=>swipeEnd(e.changedTouches[0].clientX,e.changedTouches[0].clientY,e.target),{passive:true});
+document.addEventListener('mousedown',e=>swipeStart(e.clientX,e.clientY));
+document.addEventListener('mouseup',e=>swipeEnd(e.clientX,e.clientY,e.target));
+setTimeout(()=>{ const h=$('swipehint'); if(h)h.remove(); },6500);
+
+function toggleMute(){
+  muted=!muted;
+  $('muteBtn').classList.toggle('off',muted);
+  $('muteBtn').querySelector('.em').textContent=muted?'🔇':'🎙️';
+  toast(muted?'Mic muted':'Mic live');
+}
+function toggleCam(){
+  document.body.classList.toggle('camoff');
+  toast(document.body.classList.contains('camoff')?'Camera off — audio only':'Camera on');
+}
+function fxBurst(em){
+  const stage=$('stage'), r=stage.getBoundingClientRect();
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    p.className='proj'; p.textContent=em;
+    p.style.fontSize=(20+Math.random()*26)+'px';
+    const x=r.width*(0.15+Math.random()*0.7);
+    p.style.left=x+'px'; p.style.top=(r.height-40)+'px';
+    stage.appendChild(p);
+    p.animate([
+      {transform:'translateY(0) scale(.5)',opacity:1},
+      {transform:`translate(${(Math.random()-0.5)*140}px,-${r.height*(0.5+Math.random()*0.45)}px) rotate(${(Math.random()-0.5)*360}deg) scale(1.2)`,opacity:0}
+    ],{duration:1400+Math.random()*800,easing:'cubic-bezier(.2,.7,.4,1)'}).onfinish=()=>p.remove();
+  }
+  bumpHype(4);
+}
+let ibTimer=null;
+function incoming(kind,from){
+  /* banner + on-screen hit, singer view only */
+  if(!document.body.classList.contains('singer')) return;
+  const b=$('inbanner');
+  $('ib_em').textContent=ICON[kind];
+  $('ib_tx').textContent=kind==='tomato'?`@${from} threw a tomato at you!`:
+    kind==='flowers'?`@${from} sent you flowers!`:
+    `@${from} sent you ${kind==='crown'?'the Crown 👑':kind==='storm'?'a Heart Storm':kind==='mic'?'a Mic Drop':'a Rose'}`;
+  b.className='inbanner show '+(kind==='tomato'?'bad':kind==='flowers'?'good':'gold');
+  clearTimeout(ibTimer); ibTimer=setTimeout(()=>b.classList.remove('show'),2600);
+  const r=$('stage').getBoundingClientRect();
+  landEffect(kind, r.width*(0.25+Math.random()*0.5), r.height*(0.3+Math.random()*0.3));
+}
+
+/* ---------------- auto-hide (video-call style) ---------------- */
+let hideTimer=null;
+function showUI(){
+  document.body.classList.remove('ui-hidden');
+  $('aimwrap').classList.add('show');
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(hideUI,4500);
+}
+function hideUI(){
+  document.body.classList.add('ui-hidden');
+  $('aimwrap').classList.remove('show');
+}
+function act(fn,e){ if(e)e.stopPropagation(); fn(); showUI(); }
+$('stage').addEventListener('click',()=>{ if(swiped) return; document.body.classList.contains('ui-hidden')?showUI():hideUI(); });
+['mousemove','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,()=>{ if(!document.body.classList.contains('ui-hidden'))showUI(); },{passive:true}));
+showUI();
+
+/* ---------------- chat drawer + bubbles ---------------- */
+function toggleChat(e){
+  if(e)e.stopPropagation();
+  chatOpen=!chatOpen;
+  $('chat').classList.toggle('open',chatOpen);
+  $('chatBtn').classList.toggle('on',chatOpen);
+  showUI();
+}
+function bubble(html){
+  if(chatOpen) return;
+  const b=document.createElement('div');
+  b.className='bub'; b.innerHTML=html;
+  const box=$('bubbles'); box.appendChild(b);
+  while(box.children.length>4) box.removeChild(box.firstChild);
+  setTimeout(()=>b.remove(),5000);
+}
+
+/* ---------------- lineup ---------------- */
+function openLineup(){ $('lineupView').hidden=false; $('nomView').hidden=true; renderRail(); $('veil').classList.add('open'); }
+function closeSheet(){ $('veil').classList.remove('open'); }
+function renderRail(){
+  const el=$('rail'); el.innerHTML='';
+  let filled=0;
+  roster.forEach((c,i)=>{
+    const d=document.createElement('button');
+    if(c){
+      filled++;
+      d.className='head'+(c.on?' onstage':'');
+      d.innerHTML=`<span class="hava" style="background:${c.hue}">${c.ini}</span><span class="hn">${c.name}</span><span class="hl">${c.lik.toUpperCase()}</span>`;
+    }else{
+      d.className='head empty';
+      d.innerHTML=`<span class="hava">👤</span><span class="hn">+ Nominate</span><span class="hl">SLOT ${i+1}</span>`;
+      d.onclick=()=>openNoms(i);
+    }
+    el.appendChild(d);
+  });
+  $('filledCount').textContent=filled;
+  const top=[...nominees].sort((a,b)=>b.likes-a.likes)[0];
+  $('crowdpick').style.display=(filled<10&&top)?'inline-flex':'none';
+  if(top)$('cpName').textContent=top.name;
+  renderQueue();
+}
+function renderQueue(){
+  const q=$('qlist'); q.innerHTML='';
+  let nextFlagged=false, upNextSet=false;
+  roster.forEach((c,i)=>{
+    const row=document.createElement('div');
+    if(c){
+      const isNow=!!c.on;
+      const isNext=!isNow&&!nextFlagged;
+      if(isNext) nextFlagged=true;
+      row.className='qrow'+(isNow?' now':isNext?' next':'');
+      row.innerHTML=`<span class="qn num">${i+1}</span>
+        <span class="qa" style="background:${c.hue}">${c.ini}</span>
+        <span class="qi"><span class="qname">${c.name}</span><span class="qsong">🎵 <b>“${c.song||'Picking a song…'}”</b> · ${c.lik}</span></span>
+        ${isNow?'<span class="qbadge now">ON STAGE</span>':isNext?'<span class="qbadge next">UP NEXT</span>':''}`;
+      if(isNext&&!upNextSet){
+        upNextSet=true;
+        $('un_av').style.background=c.hue; $('un_av').textContent=c.ini;
+        $('un_tx').innerHTML=`${c.name} <i>· 🎵 “${c.song}”</i>`;
+      }
+    }else{
+      row.className='qrow openrow';
+      row.innerHTML=`<span class="qn num">${i+1}</span>
+        <span class="qa">👤</span>
+        <span class="qi"><span class="qname" style="color:var(--gold)">Open slot — nominate a singer</span><span class="qsong">They bring their own videoke song</span></span>
+        <span class="qbadge open">OPEN</span>`;
+      row.onclick=()=>openNoms(i);
+    }
+    q.appendChild(row);
+  });
+  $('upnext').style.display=upNextSet?'flex':'none';
+}
+function openNoms(i){ pendingSlot=i; $('slotNo').textContent=i+1; $('lineupView').hidden=true; $('nomView').hidden=false; renderNoms(); }
+function renderNoms(){
+  const list=$('nomList'); list.innerHTML='';
+  [...nominees].sort((a,b)=>b.likes-a.likes).forEach((n,idx)=>{
+    const row=document.createElement('div');
+    row.className='nom'+(idx===0?' topn':'');
+    row.innerHTML=`<div class="na" style="background:${n.hue}">${n.ini}</div>
+      <div class="ni"><div class="nn">${n.name} ${idx===0?'<span class="badge">CROWD PICK</span>':''}</div><div class="nl">${n.tag} · 🎵 “${n.song}”</div></div>
+      <button class="likebtn ${n.liked?'liked':''}">♥ <span class="num">${fmt(n.likes)}</span></button>
+      <button class="pickbtn">Nominate</button>`;
+    row.querySelector('.likebtn').onclick=()=>{ n.liked=!n.liked; n.likes+=n.liked?1:-1; renderNoms(); };
+    row.querySelector('.pickbtn').onclick=()=>fillSlot(pendingSlot,n);
+    list.appendChild(row);
+  });
+}
+function fillSlot(i,n){
+  roster[i]={name:n.name.replace('@',''),ini:n.ini,lik:n.tag.split(' ·')[0],song:n.song,hue:n.hue};
+  nominees=nominees.filter(x=>x!==n);
+  $('lineupView').hidden=false; $('nomView').hidden=true; renderRail();
+  const h=$('rail').children[i]; if(h) h.classList.add('justfilled');
+  sysMsg(`👤 ${n.name} locked into slot ${i+1} — singing “${n.song}”`,'slot');
+  bubble(`👤 <span class="u" style="color:var(--mint)">${n.name}</span> · slot ${i+1} · 🎵 “${n.song}”`);
+  toast(`${n.name} is in! Slot ${i+1} · 🎵 “${n.song}”`);
+  bumpHype(6); punch();
+}
+function fastFill(){
+  const i=roster.indexOf(null); if(i<0) return;
+  const top=[...nominees].sort((a,b)=>b.likes-a.likes)[0]; if(!top) return;
+  fillSlot(i,top);
+}
+
+/* ---------------- gifts ---------------- */
+function setTarget(t,e){
+  if(e)e.stopPropagation();
+  target=t;
+  $('ttA').className='tt'+(t==='A'?' on-a':'');
+  $('ttB').className='tt'+(t==='B'?' on-b':'');
+  showUI();
+}
+function launch(kind){
+  const cost=COST[kind];
+  if(cost>wallet){ toast('Not enough coins 🪙'); return; }
+  if(kind==='tomato'||kind==='flowers') startCooldown(kind);
+  wallet-=cost; $('wallet').textContent=fmt(wallet);
+  if(cost>0) addPool(cost);
+  throwProjectile(kind);
+  const who=target==='A'?'Nova Vega':'Echo Rae';
+  if(kind==='tomato'){ sysMsg(`🍅 You launched a Tomato at ${who} — SPLAT!`,'tomato'); bubble(`🍅 <span class="u">You</span> → ${who} · SPLAT!`); bumpHype(4); nudgeScore(target==='A'?'B':'A',40); }
+  else if(kind==='flowers'){ sysMsg(`💐 You showered ${who} with Flowers — BRAVO!`,'flower'); bubble(`💐 <span class="u">You</span> → ${who} · BRAVO!`); bumpHype(5); nudgeScore(target,60); }
+  else{
+    sysMsg(`${ICON[kind]} You sent ${kind==='mic'?'a Mic Drop':kind==='storm'?'a Heart Storm':kind==='crown'?'the Crown':'a Rose'} to ${who} · 🪙 ${cost} to the pool`,'gold');
+    bubble(`${ICON[kind]} <span class="u" style="color:var(--gold)">You</span> → ${who} · +${cost} 🪙`);
+    bumpHype(kind==='crown'?14:kind==='storm'?9:kind==='mic'?7:3);
+    nudgeScore(target,cost*2);
+    if(cost>=100) punch();
+  }
+}
+function startCooldown(kind){
+  const btn=$(kind==='tomato'?'gTomato':'gFlowers');
+  const ring=$(kind==='tomato'?'rTomato':'rFlowers');
+  btn.classList.add('cooling'); ring.hidden=false;
+  let t=30; const bar=ring.querySelector('.bar'), sec=ring.querySelector('.sec');
+  sec.textContent=t; bar.style.strokeDashoffset=0;
+  const iv=setInterval(()=>{
+    t--; sec.textContent=t;
+    bar.style.strokeDashoffset=175.9*(1-t/30);
+    if(t<=0){ clearInterval(iv); btn.classList.remove('cooling'); ring.hidden=true; toast(`${ICON[kind]} Reloaded — fire when ready`); }
+  },1000);
+}
+function throwProjectile(kind){
+  const stage=$('stage'), r=stage.getBoundingClientRect();
+  const p=document.createElement('div');
+  p.className='proj'; p.textContent=ICON[kind];
+  const fromLeft=target==='B';
+  /* land on the singer's cam */
+  const cam=$(target==='A'?'camA':'camB').getBoundingClientRect();
+  const startX=fromLeft?24:r.width-70;
+  const endX=cam.left+cam.width/2-26;
+  const y=cam.top+cam.height*0.55;
+  p.style.left=startX+'px'; p.style.top=(r.height*0.72)+'px';
+  stage.appendChild(p);
+  const dx=endX-startX, dy=y-(r.height*0.72), peak=-(r.height*0.3+Math.random()*60);
+  p.animate([
+    {transform:'translate(0,0) rotate(0deg) scale(.6)'},
+    {transform:`translate(${dx*0.55}px,${peak}px) rotate(${fromLeft?300:-300}deg) scale(1.35)`,offset:.55},
+    {transform:`translate(${dx}px,${dy}px) rotate(${fromLeft?540:-540}deg) scale(1)`}
+  ],{duration:900,easing:'cubic-bezier(.3,.6,.6,1)'}).onfinish=()=>{ p.remove(); landEffect(kind,endX,y); };
+}
+function landEffect(kind,x,y){
+  const stage=$('stage');
+  const mark=document.createElement('div');
+  mark.className='splatmark';
+  mark.textContent=kind==='tomato'?'💥':kind==='flowers'?'🌸':kind==='storm'?'💖':kind==='crown'?'✨':'⭐';
+  mark.style.left=(x-22)+'px'; mark.style.top=(y-22)+'px';
+  stage.appendChild(mark); setTimeout(()=>mark.remove(),2400);
+  const st=document.createElement('div');
+  st.className='stamp '+(kind==='tomato'?'splat':kind==='flowers'?'bloom':'gift');
+  st.textContent=kind==='tomato'?'SPLAT!':kind==='flowers'?'BRAVO!':kind==='crown'?'ROYALTY!':kind==='storm'?'LOVE STORM!':kind==='mic'?'MIC DROP!':'RESPECT!';
+  st.style.left=Math.max(12,x-90)+'px'; st.style.top=Math.max(12,y-110)+'px';
+  stage.appendChild(st); setTimeout(()=>st.remove(),2000);
+  punch();
+}
+function punch(){ const s=$('stage'); s.classList.remove('punch'); void s.offsetWidth; s.classList.add('punch'); }
+function addPool(n){
+  pool+=n; const el=$('pool'); el.textContent=fmt(pool);
+  el.classList.add('zoom'); setTimeout(()=>el.classList.remove('zoom'),220);
+}
+
+/* ---------------- votes / hype ---------------- */
+function vote(t){
+  nudgeScore(t,120+Math.floor(Math.random()*80)); bumpHype(3);
+  const who=t==='A'?'Nova Vega':'Echo Rae';
+  sysMsg(`🗳️ You voted for ${who}`,'gold'); bubble(`🗳️ <span class="u" style="color:var(--gold)">You</span> voted ${who}`);
+}
+function nudgeScore(t,amt){
+  if(t==='A')scoreA+=amt; else scoreB+=amt;
+  const total=scoreA+scoreB, pa=Math.round(scoreA/total*100);
+  $('pctA').textContent=pa; $('pctB').textContent=100-pa;
+  $('barA').style.width=pa+'%';
+}
+function bumpHype(n){ hype=Math.min(100,hype+n); $('hypeFill').style.height=hype+'%'; }
+setInterval(()=>{ hype=Math.max(8,hype-2); $('hypeFill').style.height=hype+'%'; },2500);
+
+/* ---------------- chat sim ---------------- */
+const guests=['GuestKoala59','GuestHawk94','GuestWolf42','GuestFox62','GuestPuma70','GuestHawk20','GuestPuma42','GuestFox31','GuestWolf98','GuestRaven60','GuestHawk14','GuestPuma39'];
+const lines=['this is elite','B got robbed','A carried that round','my guy ate 🎤','send the crown 👑','prize pool going up 📈','LETS GOOO 🔥','so close omg','that was clean','VOTE B','insane energy','that duet tho 🎵','who is winning??','team A!!','slot 7 for @LunaKeys!!','fill the lineup 👤'];
+const gcolors=['#ff8093','#5ecbff','#FFB300','#17E8A0','#b98cff','#ff6fb0'];
+function addMsg(html,cls){
+  const el=document.createElement('div');
+  el.className='m'+(cls?' sys '+cls:'');
+  el.innerHTML=html;
+  const box=$('msgs'); box.appendChild(el);
+  while(box.children.length>60) box.removeChild(box.firstChild);
+  box.scrollTop=box.scrollHeight;
+  msgCount++; $('msgcount').textContent=fmt(msgCount);
+}
+function sysMsg(t,cls){ addMsg(t,cls); }
+function randMsg(){
+  const u=guests[Math.floor(Math.random()*guests.length)];
+  const c=gcolors[Math.floor(Math.random()*gcolors.length)];
+  const t=lines[Math.floor(Math.random()*lines.length)];
+  addMsg(`<span class="u" style="color:${c}">@${u}</span>: ${t}`);
+  if(Math.random()<0.35) bubble(`<span class="u" style="color:${c}">@${u}</span>&nbsp; ${t}`);
+}
+setInterval(randMsg,2400);
+setInterval(()=>{
+  if(Math.random()<0.4){
+    const k=Math.random()<0.5?'tomato':'flowers';
+    const u=guests[Math.floor(Math.random()*guests.length)];
+    const toNova=Math.random()<0.5;
+    const who=toNova?'Nova Vega':'Echo Rae';
+    sysMsg(`${ICON[k]} @${u} launched ${k==='tomato'?'a Tomato':'Flowers'} at ${who}`,k==='tomato'?'tomato':'flower');
+    bubble(`${ICON[k]} <span class="u">@${u}</span> → ${who}`);
+    if(toNova) incoming(k,u);
+    bumpHype(2);
+  }
+  viewers+=Math.floor(Math.random()*7)-2; $('viewers').textContent=fmt(viewers);
+  addPool(Math.floor(Math.random()*40));
+},4200);
+function sendChat(){
+  const i=$('chatInput'); if(!i.value.trim()) return;
+  addMsg(`<span class="u" style="color:var(--gold)">@you</span>: ${i.value.replace(/</g,'&lt;')}`);
+  i.value='';
+}
+$('chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* clock */
+let secs=161;
+setInterval(()=>{ secs=(secs+1)%3600; $('clock').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0'); },1000);
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2400); }
+
+/* seed */
+['@GuestKoala38: this is elite','@GuestFox60: team A!!','@GuestWolf55: send the crown 👑'].forEach(s=>{
+  const [u,t]=s.split(': ');
+  addMsg(`<span class="u" style="color:${gcolors[Math.floor(Math.random()*6)]}">${u}</span>: ${t}`);
+});
+sysMsg('🎵 Now playing: "Gravity of You" — duet battle. 🍅 & 💐 reload every 30s','gold');
+msgCount=62; $('msgcount').textContent='62';
+</script>
+</body>
+</html>
