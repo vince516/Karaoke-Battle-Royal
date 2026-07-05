@@ -367,3 +367,52 @@
   background: var(--red);
   animation: blink 1.4s infinite;
 }
+
+/* count-in overlay (3·2·1·SING!) — synced to the tone engine lead-in */
+.countin {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.countin .ci-song {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+.countin .ci-num {
+  font-family: 'Archivo';
+  font-weight: 900;
+  font-size: clamp(88px, 30vw, 150px);
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 12px 60px rgba(0, 0, 0, 0.55);
+  animation: ciPop 0.9s ease;
+}
+.countin .ci-num.go {
+  color: #17e8a0;
+  font-size: clamp(54px, 18vw, 92px);
+}
+@keyframes ciPop {
+  0% { transform: scale(1.55); opacity: 0; }
+  22% { transform: scale(1); opacity: 1; }
+}
+.countin .ci-hint {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 700;
+}
+.countin .ci-num.ready {
+  font-size: clamp(30px, 9vw, 46px);
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.92);
+}

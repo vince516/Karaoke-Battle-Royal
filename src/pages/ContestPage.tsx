@@ -24,6 +24,7 @@ import { ChatDrawer } from '../components/contest/ChatDrawer'
 import { Toast } from '../components/contest/Toast'
 import { GiftBursts } from '../components/contest/GiftBursts'
 import { SingerView } from '../components/singer/SingerView'
+import { CountIn } from '../components/contest/CountIn'
 
 function useIdentity() {
   const ref = useRef<{ name: string; color: string }>(null)
@@ -183,6 +184,11 @@ export default function ContestPage() {
           <button className="startbtn" onClick={startSolo}>🎤 Start singing</button>
           {media.error && <div className="err">⚠️ {media.error} — check browser permissions</div>}
         </div>
+      )}
+
+      {/* count-in: title card → 3·2·1 → SING!, with tick sounds */}
+      {mode === 'solo' && live && (
+        <CountIn icon={song.icon} title={song.title} onTick={synth.tick} />
       )}
 
       {/* solo mic/cam controls */}

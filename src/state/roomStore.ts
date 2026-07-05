@@ -32,6 +32,8 @@ interface RoomState {
   // live singer pitch (M4): shared Hz + when it arrived (performance.now())
   livePitchHz: number
   livePitchAt: number
+  // count-in: performance.now() timestamp when the current lead-in ends
+  introUntil: number
 
   // --- transient visuals ---
   messages: ChatMessage[]
@@ -75,6 +77,7 @@ interface RoomState {
   showToast: (text: string) => void
   setLineResults: (r: boolean[]) => void
   setMatch: (m: number) => void
+  setIntro: (until: number) => void
   toggleChat: () => void
   bumpViewers: (delta: number) => void
 
@@ -104,6 +107,7 @@ export const useRoom = create<RoomState>((set, get) => ({
   scoreZoom: false,
   livePitchHz: 0,
   livePitchAt: 0,
+  introUntil: 0,
 
   messages: [],
   bubbles: [],
@@ -228,6 +232,7 @@ export const useRoom = create<RoomState>((set, get) => ({
 
   setLineResults: (lineResults) => set({ lineResults }),
   setMatch: (match) => set({ match }),
+  setIntro: (introUntil) => set({ introUntil }),
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   bumpViewers: (delta) => set((s) => ({ viewers: Math.max(0, s.viewers + delta) })),
 

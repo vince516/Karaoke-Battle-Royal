@@ -83,11 +83,13 @@ export function useToneEngine(
 
     // Lead-in before line 1 so the first notes scroll IN toward the head
     // instead of the song starting mid-note the moment the screen mounts.
-    const LEAD = 1200
+    // Long enough for the 3-2-1 count-in overlay.
+    const LEAD = 4000
 
     function startLine(delay = 0) {
       const L = LINES[lineIdx]
       lineStart = performance.now() + delay
+      if (delay > 0) room().setIntro(lineStart) // drives the count-in overlay
       lineAcc = []
       if (baseRef.current) baseRef.current.textContent = L.t
       const f = fillRef.current
