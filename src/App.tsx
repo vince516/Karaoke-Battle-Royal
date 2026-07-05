@@ -8,6 +8,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/contest" element={<ContestPage />} />
+      {/* networked multi-device room (M2): synced score/hype/gifts/chat */}
+      <Route path="/room/:code" element={<ContestPage />} />
       <Route path="/party" element={<PartyPage />} />
       {/* /join/:code will deep-link straight into the guest PIN gate in M2 */}
       <Route path="/join/:code" element={<PartyPage />} />

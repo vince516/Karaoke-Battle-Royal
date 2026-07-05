@@ -10,7 +10,25 @@ and a QR party-room join flow.
 > live video stream. Every other element — tone lane, gifts, score, hype, chat
 > — is an overlay on top of that stream.
 
-## Status — Milestone M1 (static parity) ✅
+## Status — M1 (static parity) ✅ · M2 (rooms) ✅
+
+**M2 — real multi-device rooms.** A Cloudflare Worker + Durable Object (one DO
+per room code) owns the authoritative room state and broadcasts over WebSocket.
+Open `/room/:code` in two browsers and gifts, points, hype, chat, and viewer
+count stay in lock-step — measured **~40 ms** cross-device on localhost, scores
+identical, cooldowns and chat rate-limits enforced server-side. Without a room
+code the same screen runs the M1 local simulation, so the offline single-file
+build still works.
+
+Run it locally (two terminals):
+
+```bash
+npm run server    # wrangler dev — room DO on http://localhost:8787
+npm run dev        # vite — client on http://localhost:5173
+# open http://localhost:5173/Karaoke-Battle-Royal/#/room/PARTY1 in two windows
+```
+
+
 
 A pixel-close React port of the design-source prototype (`br-live/index.html`,
 `arena.html`, `party.html`), running on **simulated data**. Everything you see
@@ -42,6 +60,7 @@ What works now:
 | Styling | Tailwind (tokens) + ported prototype CSS (`src/styles/`) |
 | State | Zustand room store (`src/state/roomStore.ts`) |
 | Routing | React Router |
+| Realtime server | Cloudflare Worker + Durable Objects over WebSocket (`worker/`) |
 
 Design tokens are extracted verbatim from the prototype — Virgin red `#E10A17`,
 gold `#FFB300`, mint `#17E8A0`, splat `#FF5330`, bloom `#FF7AA8`, ink `#0E0E10`;
@@ -76,8 +95,9 @@ Mobile-first 9:16 — best viewed in a phone-sized viewport.
 
 ### Roadmap
 
-- **M2 — Rooms:** Cloudflare Workers + Durable Objects room state, QR/PIN join,
-  lobby/queue/chat/gifts/points/hype synced across devices.
+- **M2 — Rooms:** ✅ Cloudflare Worker + Durable Objects room state, WebSocket
+  sync of chat/gifts/points/hype/viewers across devices, server-side cooldowns
+  and rate-limits. (`worker/`, `src/net/`, `src/hooks/useRoomSocket.ts`.)
 - **M3 — Live video:** WebRTC publish/subscribe (LiveKit or Cloudflare Calls);
   singer's real camera as the background; auto-advance queue; singer FPV view
   (`arena.html` — swipe pager, mirrored self-cam, "YOUR PART" pill, opponent PiP).

@@ -1,19 +1,28 @@
 import { useRoom, selViewers } from '../../state/roomStore'
 import { useFullscreen } from '../../hooks/useFullscreen'
 
-export function TopBar() {
+export function TopBar({ roomCode }: { roomCode?: string }) {
   const viewers = useRoom(selViewers)
+  const connected = useRoom((s) => s.connected)
   const toggleChat = useRoom((s) => s.toggleChat)
   const { active, toggle } = useFullscreen()
 
   return (
     <header className="ui top" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30 }}>
-      <span className="live">
+      <span className="live" style={roomCode && !connected ? { background: 'var(--dim)' } : undefined}>
         <i />
-        LIVE
+        {roomCode ? (connected ? 'LIVE' : '···') : 'LIVE'}
       </span>
       <span className="ttl">
-        Tone Contest <i>· Round 1 of 3</i>
+        {roomCode ? (
+          <>
+            Room <i>· {roomCode}</i>
+          </>
+        ) : (
+          <>
+            Tone Contest <i>· Round 1 of 3</i>
+          </>
+        )}
       </span>
       <div className="r">
         <span className="chip glass">

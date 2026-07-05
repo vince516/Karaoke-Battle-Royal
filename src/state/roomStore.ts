@@ -4,6 +4,7 @@ import type {
 } from '../lib/types'
 import { GIFTS, TIERS } from '../lib/songs'
 import { escapeHtml, fmt, nextId } from '../lib/format'
+import type { ServerMsg, Transport } from '../net/roomClient'
 
 /* ============================================================
    Room store — the client-side mirror of a room's authoritative
@@ -41,6 +42,11 @@ interface RoomState {
   // --- gift cooldowns (server-enforced in production) ---
   cooldowns: Record<'tomato' | 'flowers', number>
 
+  // --- networking (M2) ---
+  networked: boolean
+  connected: boolean
+  transport: Transport | null
+
   // --- chrome ---
   chatOpen: boolean
 
@@ -51,6 +57,7 @@ interface RoomState {
   decayHype: () => void
   tickCooldowns: () => void
   addMessage: (html: string, kind?: ChatKind) => void
+  appendMessage: (html: string, kind?: ChatKind) => void
   sysMsg: (text: string, kind: ChatKind) => void
   addBubble: (html: string) => void
   sendChat: (text: string) => void
@@ -64,6 +71,11 @@ interface RoomState {
   setMatch: (m: number) => void
   toggleChat: () => void
   bumpViewers: (delta: number) => void
+
+  // --- networking actions ---
+  setTransport: (t: Transport | null) => void
+  setConnected: (v: boolean) => void
+  handleServerMsg: (msg: ServerMsg) => void
 }
 
 /** Derive hype tier index (0..4) from the endless total. */
@@ -94,6 +106,11 @@ export const useRoom = create<RoomState>((set, get) => ({
   stagePunch: 0,
 
   cooldowns: { tomato: 0, flowers: 0 },
+
+  networked: false,
+  connected: false,
+  transport: null,
+
   chatOpen: false,
 
   addScore: (n, label, plus) => {
@@ -109,10 +126,16 @@ export const useRoom = create<RoomState>((set, get) => ({
 
   sendGift: (kind, fromSelf = true) => {
     const g = GIFTS[kind]
-    // server-enforced cooldown for free gifts
+    // free-gift cooldown — optimistic locally; the server also enforces it
     if (g.cooldown) {
       if (get().cooldowns[kind as 'tomato' | 'flowers'] > 0) return
       set((s) => ({ cooldowns: { ...s.cooldowns, [kind]: g.cooldown! } }))
+    }
+    // networked: send an intent; the visuals + score arrive as server echoes
+    const transport = get().transport
+    if (transport) {
+      transport.send({ type: 'gift', kind })
+      return
     }
     set((s) => ({
       projectiles: [...s.projectiles, { id: nextId(), em: g.em, stamp: g.stamp, cls: g.cls }],
@@ -142,13 +165,19 @@ export const useRoom = create<RoomState>((set, get) => ({
       },
     })),
 
-  addMessage: (html, kind = 'guest') =>
+  // append a message without touching msgCount (server owns the count)
+  appendMessage: (html, kind = 'guest') =>
     set((s) => {
       const messages = [...s.messages, { id: nextId(), html, kind }]
       // cap client render at 60 (matches prototype + scale note)
       if (messages.length > 60) messages.splice(0, messages.length - 60)
-      return { messages, msgCount: s.msgCount + 1 }
+      return { messages }
     }),
+
+  addMessage: (html, kind = 'guest') => {
+    get().appendMessage(html, kind)
+    set((s) => ({ msgCount: s.msgCount + 1 }))
+  },
 
   sysMsg: (text, kind) => get().addMessage(text, kind),
 
@@ -162,6 +191,11 @@ export const useRoom = create<RoomState>((set, get) => ({
 
   sendChat: (text) => {
     if (!text.trim()) return
+    const transport = get().transport
+    if (transport) {
+      transport.send({ type: 'chat', text })
+      return
+    }
     get().addMessage(`<span class="u" style="color:var(--gold)">@you</span>: ${escapeHtml(text)}`, 'user')
   },
 
@@ -186,8 +220,44 @@ export const useRoom = create<RoomState>((set, get) => ({
   setMatch: (match) => set({ match }),
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   bumpViewers: (delta) => set((s) => ({ viewers: Math.max(0, s.viewers + delta) })),
+
+  setTransport: (transport) => set({ transport, networked: transport !== null }),
+  setConnected: (connected) => set({ connected }),
+
+  // Apply an authoritative server message. `state` messages replace the
+  // synced counters; `gift`/`chat` are events each client renders itself.
+  handleServerMsg: (msg) => {
+    if (msg.t === 'state') {
+      set({
+        score: msg.score,
+        hypeTotal: msg.hypeTotal,
+        msgCount: msg.msgCount,
+        viewers: msg.viewers,
+      })
+      return
+    }
+    if (msg.t === 'gift') {
+      const plus = msg.pts > 0
+      set((s) => ({
+        projectiles: [...s.projectiles, { id: nextId(), em: msg.em, stamp: msg.stamp, cls: msg.cls }],
+        floaters: [...s.floaters, { id: nextId(), label: `${plus ? '+' : ''}${msg.pts} ${msg.em}`, plus }],
+        scoreZoom: true,
+      }))
+      setTimeout(() => set({ scoreZoom: false }), 200)
+      return
+    }
+    if (msg.t === 'chat') {
+      get().appendMessage(msg.html, msg.kind as ChatKind)
+      get().addBubble(msg.html)
+    }
+  },
 }))
 
 /** Formatted convenience selectors. */
 export const selScore = (s: RoomState) => fmt(s.score)
 export const selViewers = (s: RoomState) => fmt(s.viewers)
+
+// Dev-only: expose the store for debugging in the browser console.
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  ;(window as unknown as { __room: typeof useRoom }).__room = useRoom
+}

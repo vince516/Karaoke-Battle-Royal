@@ -5,6 +5,7 @@ dist-ssr
 *.tsbuildinfo
 *.local
 .vite
+.wrangler
 .DS_Store
 *.log
 .env

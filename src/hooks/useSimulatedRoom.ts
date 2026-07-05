@@ -13,8 +13,9 @@ const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]
    hype decay, gift-cooldown ticks, and drifting viewer counts.
    Every effect here is replaced by real server diffs later.
    ============================================================ */
-export function useSimulatedRoom() {
+export function useSimulatedRoom(enabled = true) {
   useEffect(() => {
+    if (!enabled) return
     const r = useRoom.getState
 
     // opening system message
@@ -46,16 +47,13 @@ export function useSimulatedRoom() {
       r().bumpViewers(Math.floor(Math.random() * 60) - 15)
     }, 3800)
 
-    // endless hype decay
+    // endless hype decay (cooldown ticks are owned by ContestPage)
     const decay = setInterval(() => r().decayHype(), 2600)
-    // free-gift cooldowns
-    const cd = setInterval(() => r().tickCooldowns(), 1000)
 
     return () => {
       clearInterval(chat)
       clearInterval(gifts)
       clearInterval(decay)
-      clearInterval(cd)
     }
-  }, [])
+  }, [enabled])
 }

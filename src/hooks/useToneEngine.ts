@@ -35,6 +35,9 @@ export function useToneEngine(
   baseRef: RefObject<HTMLSpanElement | null>,
   fillRef: RefObject<HTMLSpanElement | null>,
   song: Song,
+  /** When networked, the tone lane is a local visual only — score/hype
+      are server-authoritative, so we don't mutate them here. */
+  networked = false,
 ) {
   useEffect(() => {
     const cv = canvasRef.current
@@ -82,28 +85,32 @@ export function useToneEngine(
       const pass = acc >= 0.62
       lineResults = [...lineResults, pass]
       const pts = Math.round(acc * 300)
-      room().addScore(
-        pass ? pts : Math.round(pts * 0.3),
-        pass ? `+${pts} TONE ✓` : `+${Math.round(pts * 0.3)} missed`,
-        pass,
-      )
-      if (pass) room().bumpHype(14)
-      else room().sysMsg(`⚠️ ${room().singer.name} missed the tone on line ${lineResults.length}`, 'sys-tomato')
+      if (!networked) {
+        room().addScore(
+          pass ? pts : Math.round(pts * 0.3),
+          pass ? `+${pts} TONE ✓` : `+${Math.round(pts * 0.3)} missed`,
+          pass,
+        )
+        if (pass) room().bumpHype(14)
+        else room().sysMsg(`⚠️ ${room().singer.name} missed the tone on line ${lineResults.length}`, 'sys-tomato')
+      }
 
       lineIdx++
       if (lineIdx >= LINES.length) {
         const passed = lineResults.filter(Boolean).length
         const done = passed >= LINES.length - 1
-        room().sysMsg(
-          done
-            ? `🏆 TONE COMPLETED — ${passed}/${LINES.length} lines! ${room().singer.name} advances`
-            : `❌ Tone not completed — ${passed}/${LINES.length}. Judges' call…`,
-          'sys-gold',
-        )
-        room().showToast(done ? '🏆 TONE COMPLETED!' : 'Tone incomplete…')
-        if (done) {
-          room().bumpHype(60)
-          room().spawnStamp('TONE COMPLETE!', 'gift')
+        if (!networked) {
+          room().sysMsg(
+            done
+              ? `🏆 TONE COMPLETED — ${passed}/${LINES.length} lines! ${room().singer.name} advances`
+              : `❌ Tone not completed — ${passed}/${LINES.length}. Judges' call…`,
+            'sys-gold',
+          )
+          room().showToast(done ? '🏆 TONE COMPLETED!' : 'Tone incomplete…')
+          if (done) {
+            room().bumpHype(60)
+            room().spawnStamp('TONE COMPLETE!', 'gift')
+          }
         }
         lineIdx = 0
         lineResults = []
@@ -194,5 +201,5 @@ export function useToneEngine(
       removeEventListener('resize', sizeCanvas)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [song])
+  }, [song, networked])
 }

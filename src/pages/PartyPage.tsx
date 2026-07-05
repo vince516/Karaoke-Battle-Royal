@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SONG_CATALOGUE } from '../lib/songs'
+import { createRoom as createServerRoom } from '../net/roomClient'
 
 /* ============================================================
    Party room / join flow — React port of party.html.
@@ -150,9 +151,16 @@ export default function PartyPage() {
     flash(`🔒 Slot ${pendingSlot + 1} · “${title}”`)
     go('s5')
   }
-  const startBattle = () => {
+  const startBattle = async () => {
     flash('🎤 Launching the arena…')
-    setTimeout(() => nav('/contest'), 700)
+    try {
+      // spin up a real synced room (Durable Object) and enter it
+      const serverCode = await createServerRoom(roomName, slots)
+      nav(`/room/${serverCode}`)
+    } catch {
+      // no room server reachable (e.g. offline single-file build) → local demo
+      nav('/contest')
+    }
   }
 
   const filled = queue.filter(Boolean).length

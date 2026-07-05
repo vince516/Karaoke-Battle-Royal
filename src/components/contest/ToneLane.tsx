@@ -3,7 +3,7 @@ import type { Song } from '../../lib/types'
 import { useRoom } from '../../state/roomStore'
 import { useToneEngine } from '../../hooks/useToneEngine'
 
-export function ToneLane({ song }: { song: Song }) {
+export function ToneLane({ song, networked = false }: { song: Song; networked?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const baseRef = useRef<HTMLSpanElement>(null)
   const fillRef = useRef<HTMLSpanElement>(null)
@@ -11,7 +11,7 @@ export function ToneLane({ song }: { song: Song }) {
   const match = useRoom((s) => s.match)
   const lineResults = useRoom((s) => s.lineResults)
 
-  useToneEngine(canvasRef, baseRef, fillRef, song)
+  useToneEngine(canvasRef, baseRef, fillRef, song, networked)
 
   const now = lineResults.length // the next unfinished line is "now"
 
