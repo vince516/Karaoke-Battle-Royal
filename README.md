@@ -117,6 +117,15 @@ npm run build    # type-check + production build
 
 Mobile-first 9:16 — best viewed in a phone-sized viewport.
 
+### Install as an app (PWA)
+
+The web build is an installable **Progressive Web App** — service worker + manifest
++ icons (`vite-plugin-pwa`). Once served over HTTPS, phones can **Add to Home
+Screen** and it launches full-screen like a native app, works offline (app shell
++ bundled song list cached), and shows the Battle Royale icon. Same codebase powers
+the web and the installable app; a native store build (iOS/Android) can wrap this
+with Capacitor later.
+
 ### Scale load test
 
 ```bash
