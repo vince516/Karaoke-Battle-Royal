@@ -162,6 +162,14 @@ export const CLASSIC_IDS = new Set<string>([
   'lupang-hinirang', 'happy-birthday', 'mary-lamb', 'twinkle-star', 'ode-to-joy', 'jingle-bells',
 ])
 
+/** Classic titles (for views that only know the song's display name). */
+export const CLASSIC_TITLES = new Set<string>(
+  SONG_CATALOGUE.filter((s) => CLASSIC_IDS.has(s.id)).map((s) => s.title),
+)
+/** Provenance label: public-domain classics vs our Suno-style originals. */
+export const classicArtist = (id: string) => (CLASSIC_IDS.has(id) ? 'Public domain' : 'Battle Royale Originals')
+export const songTag = (title: string) => (CLASSIC_TITLES.has(title) ? 'Public domain' : 'Suno Original')
+
 /* ================= DIFFICULTY ================= */
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'pro'
 export interface DiffSpec {

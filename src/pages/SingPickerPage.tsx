@@ -22,8 +22,8 @@ export default function SingPickerPage() {
 
         <h1>Pick a track to sing</h1>
         <p className="sub">
-          Tap a song — your camera becomes the stage and your voice rides the tone lane. All originals;
-          you'll be asked to allow camera &amp; mic.
+          Tap a song — your camera becomes the stage and your voice rides the tone lane. Familiar
+          public-domain classics + our own originals; you'll be asked to allow camera &amp; mic.
         </p>
 
         <div className="card">

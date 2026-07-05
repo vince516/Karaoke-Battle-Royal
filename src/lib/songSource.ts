@@ -1,5 +1,5 @@
 import type { Song } from './types'
-import { GRAVITY_OF_YOU, SONG_CATALOGUE } from './songs'
+import { GRAVITY_OF_YOU, SONG_CATALOGUE, classicArtist } from './songs'
 
 /* ============================================================
    Client song source. Reads the catalogue from OUR backend
@@ -46,7 +46,7 @@ export async function fetchCatalogue(): Promise<SongSummary[]> {
     return data.songs
   } catch {
     return SONG_CATALOGUE.map((s) => ({
-      id: s.id, title: s.title, artist: 'Battle Royale Originals',
+      id: s.id, title: s.title, artist: classicArtist(s.id),
       duration: s.duration, icon: s.icon, source: 'originals',
     }))
   }

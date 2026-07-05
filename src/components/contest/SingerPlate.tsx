@@ -1,4 +1,5 @@
 import { useRoom } from '../../state/roomStore'
+import { songTag } from '../../lib/songs'
 
 export function SingerPlate() {
   const singer = useRoom((s) => s.singer)
@@ -8,7 +9,7 @@ export function SingerPlate() {
       <span>
         <div className="nm">{singer.name}</div>
         <div className="sg">
-          🎵 <b>“{singer.song}”</b> · Suno Original
+          🎵 <b>“{singer.song}”</b> · {songTag(singer.song)}
         </div>
       </span>
     </div>
