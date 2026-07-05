@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchCatalogue, type SongSummary } from '../lib/songSource'
+import { CLASSIC_IDS } from '../lib/songs'
 
 /* Choose a song to sing. Reads the catalogue (backend, or bundled
    originals offline) and hands the pick to the solo karaoke screen. */
@@ -31,7 +32,10 @@ export default function SingPickerPage() {
               <span className="sic">{s.icon}</span>
               <span className="si">
                 <span className="snm">
-                  {s.title} <span className="sunotag">ORIGINAL</span>
+                  {s.title}{' '}
+                  <span className="sunotag" style={CLASSIC_IDS.has(s.id) ? { background: 'linear-gradient(90deg,#0e8f6b,#17E8A0)' } : undefined}>
+                    {CLASSIC_IDS.has(s.id) ? 'CLASSIC' : 'ORIGINAL'}
+                  </span>
                 </span>
                 <span className="sdt">{s.artist}</span>
               </span>

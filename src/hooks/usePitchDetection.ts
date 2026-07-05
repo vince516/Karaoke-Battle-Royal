@@ -57,14 +57,31 @@ export function usePitchDetection(stream: MediaStream | null, onFrame: (f: Pitch
 
 /* Map a frequency to the tone lane's 0..1 vertical position across a
    two-octave singing window (C3≈130.8Hz … C5≈523.3Hz). 0 = top row. */
-const LO = 130.81
-const HI = 523.25
-export function hzToLane(hz: number): number {
-  const semis = 12 * Math.log2(hz / LO)
-  const span = 12 * Math.log2(HI / LO)
-  return Math.max(0, Math.min(1, 1 - semis / span))
-}
-/** Tone-lane row (0..8, low→high) → frequency, inverse of hzToLane. */
+/* The 9 tone-lane rows map to a C-major scale from C3 upward, so encoded
+   melodies sound like real (in-key) tunes and scoring stays consistent:
+   hzToLane(noteToHz(row)) === 1 - row/8. */
+const BASE = 130.81 // C3
+const SCALE = [0, 2, 4, 5, 7, 9, 11, 12, 14] // semitones above C3 for rows 0..8
+
+/** Row (0..8, may be fractional) → frequency. */
 export function noteToHz(note: number): number {
-  return LO * Math.pow(2, note / 4) // 8 rows across the two-octave window
+  const n = Math.max(0, Math.min(8, note))
+  const lo = Math.floor(n)
+  const hi = Math.min(8, lo + 1)
+  const semi = SCALE[lo] + (SCALE[hi] - SCALE[lo]) * (n - lo)
+  return BASE * Math.pow(2, semi / 12)
+}
+
+/** Frequency → lane position 0 (top) … 1 (bottom), inverse of the row map. */
+export function hzToLane(hz: number): number {
+  const semi = 12 * Math.log2(hz / BASE)
+  if (semi <= SCALE[0]) return 1
+  if (semi >= SCALE[8]) return 0
+  for (let r = 0; r < 8; r++) {
+    if (semi <= SCALE[r + 1]) {
+      const row = r + (semi - SCALE[r]) / (SCALE[r + 1] - SCALE[r])
+      return 1 - row / 8
+    }
+  }
+  return 0
 }
