@@ -8,8 +8,10 @@ import type { Song, GiftDef, GiftKind } from './types'
 
 /** Beat clock — ms per beat (from the prototype's tone engine). */
 export const BEAT = 520
-/** Number of pitch rows in the tone lane. */
-export const NOTES = 9
+/** Number of pitch rows in the tone lane — a full two octaves of C-major
+    (rows 0..14 = C D E F G A B C' D' E' F' G' A' B' C''), so wide-range
+    songs like anthems get real headroom instead of being squashed. */
+export const NOTES = 15
 
 /** "Gravity of You" — the flagship contest song (Nova Vega's set). */
 export const GRAVITY_OF_YOU: Song = {

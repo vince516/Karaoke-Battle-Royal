@@ -56,6 +56,10 @@ export function useToneEngine(
     if (!ctx) return
 
     const LINES = song.lines
+    // Row spacing shrinks as NOTES grows; scale pixel tolerances (and the
+    // simulated-singer wobble) so difficulty is invariant to lane height.
+    // =1 at the original 9-row geometry.
+    const geomScale = 8 / (NOTES - 1)
     let raf = 0
     let lineIdx = 0
     let lineStart = performance.now()
@@ -190,13 +194,13 @@ export function useToneEngine(
         const py = 12 + (H - 24) * hzToLane(rs.livePitchHz)
         singerY += (py - singerY) * 0.35
       } else {
-        const wobble = Math.sin(now / 130) * 4 + Math.sin(now / 47) * 2
-        const drift = Math.sin(now / 2400) > 0.82 ? 26 : 0
+        const wobble = (Math.sin(now / 130) * 4 + Math.sin(now / 47) * 2) * geomScale
+        const drift = (Math.sin(now / 2400) > 0.82 ? 26 : 0) * geomScale
         singerY += (target + wobble + drift - singerY) * 0.18
       }
       const dist = Math.abs(singerY - target)
-      const onTone = dist < diffRef.current.tol
-      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / diffRef.current.span))
+      const onTone = dist < diffRef.current.tol * geomScale
+      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / (diffRef.current.span * geomScale)))
 
       // head dot + trail
       ctx.fillStyle = onTone ? 'rgba(23,232,160,.9)' : 'rgba(255,83,48,.9)'
