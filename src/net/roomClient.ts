@@ -28,6 +28,7 @@ export type ServerMsg =
   | { t: 'peer-leave'; id: string }
   | { t: 'publisher'; id: string | null }
   | { t: 'rtc'; from: string; data: RtcSignal }
+  | { t: 'pitch'; hz: number; clarity: number }
 
 export type Intent =
   | { type: 'hello'; name: string; color: string }
@@ -36,6 +37,7 @@ export type Intent =
   | { type: 'publish' }
   | { type: 'unpublish' }
   | { type: 'rtc'; to: string; data: RtcSignal }
+  | { type: 'pitch'; hz: number; clarity: number }
 
 /** Tiny pub/sub so both the store and the WebRTC layer see every frame. */
 type Listener = (msg: ServerMsg) => void

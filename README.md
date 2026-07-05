@@ -10,7 +10,20 @@ and a QR party-room join flow.
 > live video stream. Every other element — tone lane, gifts, score, hype, chat
 > — is an overlay on top of that stream.
 
-## Status — M1 ✅ · M2 rooms ✅ · M3 live video ✅ · M5 scale ✅
+## Status — M1 ✅ · M2 rooms ✅ · M3 video ✅ · M4 tone+songs ✅ · M5 scale ✅
+
+**M4 — real tone engine + backend song catalogue.** The tone dot is now driven
+by **real mic pitch** (pitchy / McLeod method, ~20 Hz) off the singer's WebRTC
+audio, relayed through the room DO so **every viewer's lane shows the same dot**
+(verified singer→viewer). Songs live on **our backend** — a Cloudflare **D1**
+table (melody + timed lyrics) with **R2** for audio — not a third-party API at
+runtime. External APIs are *ingestion* sources: **Suno** (originals + timestamped
+lyrics), **Jamendo** (Creative-Commons audio), **LRCLIB** (synced lyrics). Raw
+**LRC ingests into a singable melody** automatically (`/api/songs/ingest`); browse
+and ingest at **`/songs`**. No copyrighted lyrics are committed — the default
+catalogue is originals. See `DEPLOY.md` for wiring the SFU/HLS + D1/R2.
+
+
 
 **M5 — scale mode (Twitch-like volume).** Above a viewer threshold the room
 switches from per-event broadcast to **server-side aggregation**: gifts batch
@@ -138,8 +151,11 @@ node scripts/loadtest.mjs 500 40 6 # 500 viewers, 40 gifters, 6s window
   and mic/cam/end-set controls. (`worker/room.ts` signaling, `src/net/webrtc.ts`,
   `src/hooks/useMedia.ts` + `useWebRTC.ts`, `src/components/singer/`.) Still to
   come: opponent/duet PiP and queue auto-advance.
-- **M4 — Real tone engine:** client-side pitch detection, shared pitch frames,
-  server-scored lines, LRC+melody song loader.
+- **M4 — Real tone engine:** ✅ mic pitch detection (pitchy) + shared pitch
+  frames + backend song catalogue (D1/R2) with LRC→melody ingestion.
+  (`usePitchDetection`, `worker/songs.ts`, `worker/lrc.ts`, `/songs`.) Remaining:
+  server-authoritative line scoring (clients currently score locally off the
+  shared dot) and real audio assets in R2.
 - **M5 — Scale mode:** ✅ server-side gift aggregation ticks, bounded fan-out
   (join/leave/chat), LL-HLS viewer path (`useHlsPlayback` + hls.js), 500-viewer
   load test. (`worker/room.ts`, `scripts/loadtest.mjs`.)

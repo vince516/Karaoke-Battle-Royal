@@ -29,6 +29,9 @@ interface RoomState {
   lineResults: boolean[]
   match: number // live accuracy %
   scoreZoom: boolean
+  // live singer pitch (M4): shared Hz + when it arrived (performance.now())
+  livePitchHz: number
+  livePitchAt: number
 
   // --- transient visuals ---
   messages: ChatMessage[]
@@ -99,6 +102,8 @@ export const useRoom = create<RoomState>((set, get) => ({
   lineResults: [],
   match: 92,
   scoreZoom: false,
+  livePitchHz: 0,
+  livePitchAt: 0,
 
   messages: [],
   bubbles: [],
@@ -268,6 +273,11 @@ export const useRoom = create<RoomState>((set, get) => ({
     if (msg.t === 'chat') {
       get().appendMessage(msg.html, msg.kind as ChatKind)
       get().addBubble(msg.html)
+      return
+    }
+    if (msg.t === 'pitch') {
+      // shared live pitch → drives the same tone dot on every client
+      set({ livePitchHz: msg.hz, livePitchAt: performance.now() })
     }
   },
 }))

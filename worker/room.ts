@@ -248,6 +248,14 @@ export class Room {
         if (target) this.safeSend(target, { t: 'rtc', from: sess.id, data: msg.data })
         break
       }
+      case 'pitch': {
+        // the live singer's pitch frame — relay to everyone (incl. sender)
+        // so every tone lane shows the same dot. Only the publisher's
+        // frames matter; ignore others.
+        if (sess.id !== this.publisherId) break
+        this.broadcastEvent({ t: 'pitch', hz: Number(msg.hz) || 0, clarity: Number(msg.clarity) || 0 })
+        break
+      }
     }
   }
 

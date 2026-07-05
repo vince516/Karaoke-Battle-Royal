@@ -7,5 +7,14 @@
     "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // Song catalogue: D1 for metadata + melody/lyrics, R2 for audio assets.
+  // Create these once with:
+  //   npx wrangler d1 create battle-royale-songs
+  //   npx wrangler r2 bucket create battle-royale-assets
+  // then paste the returned database_id below.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "battle-royale-songs", "database_id": "local-dev-placeholder" }
+  ],
+  "r2_buckets": [{ "binding": "ASSETS", "bucket_name": "battle-royale-assets" }],
   "dev": { "port": 8787 }
 }

@@ -1,9 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
 import { Room } from './room'
+import { listSongs, getSong, ingestSong, ingestFromLrclib, type SongsEnv } from './songs'
 
 export { Room }
 
-interface Env {
+interface Env extends SongsEnv {
   ROOMS: DurableObjectNamespace
 }
 
@@ -50,6 +51,40 @@ export default {
       const stub = env.ROOMS.get(env.ROOMS.idFromName(meta[1]))
       const res = await stub.fetch('https://do/meta')
       return json(await res.json())
+    }
+
+    // ---- song catalogue (our backend: D1 + R2) ----
+    if (url.pathname === '/api/songs' && req.method === 'GET') {
+      return json({ songs: await listSongs(env) })
+    }
+    const audio = url.pathname.match(/^\/api\/songs\/([A-Za-z0-9-]+)\/audio$/)
+    if (audio && req.method === 'GET') {
+      const song = await getSong(env, audio[1])
+      if (!song?.audio_key || !env.ASSETS) return new Response('no audio', { status: 404, headers: CORS })
+      const obj = await env.ASSETS.get(song.audio_key)
+      if (!obj) return new Response('not found', { status: 404, headers: CORS })
+      return new Response(obj.body, {
+        headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=31536000', ...CORS },
+      })
+    }
+    const song = url.pathname.match(/^\/api\/songs\/([A-Za-z0-9-]+)$/)
+    if (song && req.method === 'GET') {
+      const s = await getSong(env, song[1])
+      return s ? json(s) : new Response('not found', { status: 404, headers: CORS })
+    }
+    // ingest from a source into our catalogue (Suno original payload, or LRCLIB ref)
+    if (url.pathname === '/api/songs/ingest' && req.method === 'POST') {
+      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
+      try {
+        if (body.lrclib) {
+          const q = body.lrclib as { artist: string; track: string; album?: string; duration?: number }
+          return json(await ingestFromLrclib(env, q))
+        }
+        const id = await ingestSong(env, body as never)
+        return json({ id })
+      } catch (e) {
+        return json({ error: (e as Error).message }, 400)
+      }
     }
 
     // websocket upgrade → forward to the room's DO

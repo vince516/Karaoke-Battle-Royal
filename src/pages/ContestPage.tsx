@@ -6,6 +6,7 @@ import { useSimulatedRoom } from '../hooks/useSimulatedRoom'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import { useMedia } from '../hooks/useMedia'
 import { useWebRTC } from '../hooks/useWebRTC'
+import { usePitchDetection } from '../hooks/usePitchDetection'
 import { TIERS, GRAVITY_OF_YOU, GUEST_COLORS } from '../lib/songs'
 import { Stage } from '../components/contest/Stage'
 import { TopBar } from '../components/contest/TopBar'
@@ -74,6 +75,13 @@ export default function ContestPage() {
     setLive(false)
     setView('audience')
   }
+
+  // when live, detect real mic pitch and share it so every tone lane
+  // shows the same dot (M4). Also update our own dot immediately.
+  usePitchDetection(live ? media.stream : null, (f) => {
+    useRoom.getState().transport?.send({ type: 'pitch', hz: f.hz, clarity: f.clarity })
+    useRoom.setState({ livePitchHz: f.hz, livePitchAt: performance.now() })
+  })
 
   // gift cooldown ticks run in both modes
   const tickCooldowns = useRoom((s) => s.tickCooldowns)

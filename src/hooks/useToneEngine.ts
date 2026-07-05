@@ -2,6 +2,7 @@ import { useEffect, type RefObject } from 'react'
 import type { Song, SongLine } from '../lib/types'
 import { BEAT, NOTES } from '../lib/songs'
 import { useRoom } from '../state/roomStore'
+import { hzToLane } from './usePitchDetection'
 
 /* ============================================================
    Tone engine — a faithful port of the prototype's canvas loop.
@@ -162,11 +163,19 @@ export function useToneEngine(
         t += len * BEAT
       }
 
-      // simulated singer pitch: follows target with noise + occasional slips
+      // singer pitch: REAL shared mic pitch if a fresh frame exists
+      // (M4 — everyone sees the same dot), else the simulated fallback.
       const target = 12 + (H - 24) * noteAt(L, ms)
-      const wobble = Math.sin(now / 130) * 4 + Math.sin(now / 47) * 2
-      const drift = Math.sin(now / 2400) > 0.82 ? 26 : 0
-      singerY += (target + wobble + drift - singerY) * 0.18
+      const rs = room()
+      const havePitch = rs.livePitchHz > 0 && now - rs.livePitchAt < 300
+      if (havePitch) {
+        const py = 12 + (H - 24) * hzToLane(rs.livePitchHz)
+        singerY += (py - singerY) * 0.35
+      } else {
+        const wobble = Math.sin(now / 130) * 4 + Math.sin(now / 47) * 2
+        const drift = Math.sin(now / 2400) > 0.82 ? 26 : 0
+        singerY += (target + wobble + drift - singerY) * 0.18
+      }
       const dist = Math.abs(singerY - target)
       const onTone = dist < 14
       lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / 40))

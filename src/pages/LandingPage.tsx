@@ -56,8 +56,8 @@ export default function LandingPage() {
           </div>
 
           <p className="linkrow">
-            Milestone <b style={{ color: 'var(--txt)' }}>M1 — static parity</b>. Rooms, live WebRTC video, and the
-            real tone engine land in M2–M4. <Link to="/contest">Jump to the stage →</Link>
+            Live rooms, WebRTC video, real mic-pitch tone engine, and a backend song catalogue are all
+            wired. <Link to="/songs">Browse the song catalogue →</Link>
           </p>
         </section>
       </div>
