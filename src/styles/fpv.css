@@ -95,6 +95,59 @@
   font-size: 44px;
 }
 
+/* solo karaoke start gate — grants camera + mic on tap */
+.solo-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 0 32px;
+  background: radial-gradient(90% 70% at 50% 40%, rgba(225, 10, 23, 0.18), rgba(8, 6, 12, 0.96));
+  backdrop-filter: blur(6px);
+}
+.solo-gate .sg-song {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+}
+.solo-gate h2 {
+  font-family: 'Archivo';
+  font-weight: 900;
+  font-size: clamp(26px, 7vw, 34px);
+}
+.solo-gate p {
+  color: var(--mut);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 320px;
+}
+.solo-gate .startbtn {
+  margin-top: 8px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 900;
+  font-size: 16px;
+  border-radius: 999px;
+  padding: 15px 30px;
+  box-shadow: 0 8px 30px rgba(225, 10, 23, 0.45);
+  transition: transform 0.1s;
+}
+.solo-gate .startbtn:active {
+  transform: scale(0.96);
+}
+.solo-gate .err {
+  color: var(--splat);
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 300px;
+}
+
 /* go-live call to action (viewer opens MY CAM before publishing) */
 .golive {
   position: absolute;

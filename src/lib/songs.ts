@@ -30,14 +30,59 @@ export const GRAVITY_OF_YOU: Song = {
   ],
 }
 
-/** Song catalogue for the party-room picker (all originals). */
+/** Each original has its own lyrics + melody contour (all Suno-style originals). */
+const MIDNIGHT_RUN: Song = {
+  id: 'midnight-run', title: 'Midnight Run', desc: 'Synthwave banger · high-energy chorus', icon: '🌃', duration: '3:12',
+  lines: [
+    { t: 'Engine humming, headlights low', mel: [[2, 2], [2, 1], [3, 2], [4, 2], [3, 1], [2, 2]] },
+    { t: 'Chasing dawn where the wild things go', mel: [[3, 1], [4, 2], [5, 2], [6, 1], [5, 2], [4, 2], [3, 1]] },
+    { t: 'City fading in the mirror glow', mel: [[4, 2], [5, 1], [6, 2], [7, 2], [6, 1], [5, 2]] },
+    { t: 'On a midnight run, we let it go', mel: [[6, 2], [7, 2], [8, 2], [8, 1], [7, 2], [6, 2]] },
+    { t: 'Faster, harder, never slow', mel: [[5, 1], [6, 1], [7, 2], [8, 2], [7, 1], [6, 2], [5, 1]] },
+    { t: 'Neon rivers start to flow', mel: [[4, 2], [3, 2], [2, 2], [3, 1], [4, 2], [5, 2]] },
+  ],
+}
+const PAPER_CROWNS: Song = {
+  id: 'paper-crowns', title: 'Paper Crowns', desc: 'Acoustic ballad · big belting bridge', icon: '👑', duration: '3:40',
+  lines: [
+    { t: 'We built our thrones from paper and rain', mel: [[2, 3], [3, 2], [4, 2], [3, 1], [2, 2]] },
+    { t: 'Crowns that melt but we wore them the same', mel: [[3, 2], [4, 2], [5, 2], [4, 1], [3, 2], [2, 2]] },
+    { t: 'Hold my hand while the kingdom falls', mel: [[4, 2], [5, 2], [6, 3], [5, 1], [4, 2]] },
+    { t: 'We were golden, we were tall', mel: [[6, 2], [7, 3], [8, 3], [7, 2]] },
+    { t: 'Paper crowns and a heart of stone', mel: [[5, 2], [6, 2], [7, 2], [6, 1], [5, 2], [4, 2]] },
+    { t: 'Even paper kings go home', mel: [[4, 2], [3, 2], [2, 3], [3, 2], [2, 2]] },
+  ],
+}
+const STATIC_BLOOM: Song = {
+  id: 'static-bloom', title: 'Static Bloom', desc: 'Dance-pop · rap verse + sung hook', icon: '⚡', duration: '2:47',
+  lines: [
+    { t: 'Turn it up, feel the static bloom', mel: [[4, 1], [4, 1], [5, 1], [6, 2], [5, 1], [4, 2]] },
+    { t: 'Colors bursting all across the room', mel: [[5, 1], [6, 1], [7, 2], [8, 2], [7, 1], [6, 1], [5, 1]] },
+    { t: 'Every heartbeat is a firework', mel: [[6, 1], [7, 1], [8, 2], [7, 2], [6, 2], [5, 1]] },
+    { t: 'Light me up until it hurts', mel: [[7, 2], [8, 2], [8, 2], [6, 2], [7, 2]] },
+    { t: 'We are electric, we are new', mel: [[5, 2], [6, 2], [7, 1], [8, 2], [6, 2], [5, 1]] },
+    { t: 'Bloom, bloom, the night is ours to use', mel: [[8, 2], [8, 1], [7, 2], [6, 2], [5, 2], [4, 2]] },
+  ],
+}
+const FOUR_AM_FLOOR: Song = {
+  id: 'four-am-floor', title: 'Four AM Floor', desc: 'Club track · call-and-response', icon: '🪩', duration: '2:39',
+  lines: [
+    { t: 'Four AM and the floor still shakes', mel: [[3, 1], [3, 1], [4, 1], [5, 2], [4, 1], [3, 2]] },
+    { t: 'Bass so low that the ceiling breaks', mel: [[2, 2], [3, 1], [4, 2], [5, 1], [4, 2], [3, 1]] },
+    { t: 'One more song before the sunrise', mel: [[4, 1], [5, 2], [6, 2], [7, 1], [6, 2], [5, 1]] },
+    { t: 'Keep your hands up to the skylight', mel: [[6, 2], [7, 2], [8, 1], [8, 2], [7, 2], [6, 1]] },
+    { t: 'Do not stop till the morning calls', mel: [[5, 1], [6, 1], [7, 2], [6, 1], [5, 2], [4, 2]] },
+    { t: 'We own the four AM floor', mel: [[4, 2], [3, 2], [2, 3], [4, 2], [3, 2]] },
+  ],
+}
+
+/** Song catalogue — distinct originals, each with its own melody + lyrics. */
 export const SONG_CATALOGUE: Song[] = [
   GRAVITY_OF_YOU,
-  { id: 'midnight-run', title: 'Midnight Run', desc: 'Synthwave banger · high-energy chorus', icon: '🌃', duration: '3:12', lines: GRAVITY_OF_YOU.lines },
-  { id: 'paper-crowns', title: 'Paper Crowns', desc: 'Acoustic ballad · big belting bridge', icon: '👑', duration: '3:40', lines: GRAVITY_OF_YOU.lines },
-  { id: 'static-bloom', title: 'Static Bloom', desc: 'Dance-pop · rap verse + sung hook', icon: '⚡', duration: '2:47', lines: GRAVITY_OF_YOU.lines },
-  { id: 'last-train-home', title: 'Last Train Home', desc: 'Slow-burn OPM-style anthem', icon: '🚉', duration: '3:55', lines: GRAVITY_OF_YOU.lines },
-  { id: 'four-am-floor', title: 'Four AM Floor', desc: 'Club track · call-and-response', icon: '🪩', duration: '2:39', lines: GRAVITY_OF_YOU.lines },
+  MIDNIGHT_RUN,
+  PAPER_CROWNS,
+  STATIC_BLOOM,
+  FOUR_AM_FLOOR,
 ]
 
 /* ================= GIFTS = POINTS ================= */

@@ -24,11 +24,14 @@ export default function LandingPage() {
           </p>
 
           <div className="hero-cta">
-            <Link to="/contest" className="big red" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
-              ▶ Watch the live contest
+            <Link to="/sing" className="big red" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              🎤 Sing a song
             </Link>
-            <Link to="/party" className="big ghost" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
-              🎤 Host or join a party room
+            <Link to="/party" className="big gold" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              📲 Host or join a party room
+            </Link>
+            <Link to="/contest" className="big ghost" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              ▶ Watch the demo contest
             </Link>
           </div>
 
