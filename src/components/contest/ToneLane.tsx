@@ -9,11 +9,14 @@ export function ToneLane({
   networked = false,
   onSegment,
   diff = DIFFICULTY.normal,
+  resetKey = 0,
 }: {
   song: Song
   networked?: boolean
   onSegment?: (note: number, durMs: number) => void
   diff?: DiffSpec
+  /** Changing this restarts the song from the top. */
+  resetKey?: unknown
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const baseRef = useRef<HTMLSpanElement>(null)
@@ -22,7 +25,7 @@ export function ToneLane({
   const match = useRoom((s) => s.match)
   const lineResults = useRoom((s) => s.lineResults)
 
-  useToneEngine(canvasRef, baseRef, fillRef, song, networked, onSegment, diff)
+  useToneEngine(canvasRef, baseRef, fillRef, song, networked, onSegment, diff, resetKey)
 
   const now = lineResults.length // the next unfinished line is "now"
 

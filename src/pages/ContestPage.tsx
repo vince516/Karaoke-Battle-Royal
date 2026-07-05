@@ -152,6 +152,8 @@ export default function ContestPage() {
         networked={networked}
         diff={diff}
         onSegment={mode === 'solo' && live ? (note, durMs) => synth.playNote(noteToHz(note), durMs) : undefined}
+        // going live restarts the song from the top (it idles behind the gate)
+        resetKey={live}
       />
 
       {/* crowd + gifts belong to the demo/room, not solo karaoke */}

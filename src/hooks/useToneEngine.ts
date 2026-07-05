@@ -43,6 +43,8 @@ export function useToneEngine(
   onSegment?: (note: number, durMs: number) => void,
   /** Pitch-tracking strictness (contest = pro). */
   diff: DiffSpec = DIFFICULTY.normal,
+  /** Changing this restarts the song from the top (e.g. going live). */
+  resetKey: unknown = 0,
 ) {
   const segCb = useRef(onSegment)
   segCb.current = onSegment
@@ -79,9 +81,13 @@ export function useToneEngine(
       ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
     }
 
-    function startLine() {
+    // Lead-in before line 1 so the first notes scroll IN toward the head
+    // instead of the song starting mid-note the moment the screen mounts.
+    const LEAD = 1200
+
+    function startLine(delay = 0) {
       const L = LINES[lineIdx]
-      lineStart = performance.now()
+      lineStart = performance.now() + delay
       lineAcc = []
       if (baseRef.current) baseRef.current.textContent = L.t
       const f = fillRef.current
@@ -90,7 +96,7 @@ export function useToneEngine(
         f.style.transition = 'none'
         f.style.width = '0%'
         void f.offsetWidth
-        f.style.transition = `width ${lineDur(L)}ms linear`
+        f.style.transition = `width ${lineDur(L)}ms linear ${delay}ms`
         f.style.width = '100%'
       }
     }
@@ -131,7 +137,7 @@ export function useToneEngine(
         lineResults = []
       }
       room().setLineResults(lineResults)
-      startLine()
+      startLine(lineIdx === 0 ? LEAD : 0) // fresh run-up when the song loops
     }
 
     function draw(now: number) {
@@ -200,7 +206,7 @@ export function useToneEngine(
       }
       const dist = Math.abs(singerY - target)
       const onTone = dist < diffRef.current.tol * geomScale
-      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / (diffRef.current.span * geomScale)))
+      if (ms >= 0) lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / (diffRef.current.span * geomScale)))
 
       // head dot + trail
       ctx.fillStyle = onTone ? 'rgba(23,232,160,.9)' : 'rgba(255,83,48,.9)'
@@ -216,15 +222,17 @@ export function useToneEngine(
 
       // live match%
       const recent = lineAcc.slice(-60)
-      const m = Math.round((recent.reduce((a, b) => a + b, 0) / recent.length) * 100)
-      room().setMatch(m)
+      if (recent.length) {
+        const m = Math.round((recent.reduce((a, b) => a + b, 0) / recent.length) * 100)
+        room().setMatch(m)
+      }
 
       raf = requestAnimationFrame(draw)
     }
 
     sizeCanvas()
     addEventListener('resize', sizeCanvas)
-    startLine()
+    startLine(LEAD)
     raf = requestAnimationFrame(draw)
 
     return () => {
@@ -232,5 +240,5 @@ export function useToneEngine(
       removeEventListener('resize', sizeCanvas)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [song, networked])
+  }, [song, networked, resetKey])
 }
