@@ -294,6 +294,10 @@ export default function PartyPage() {
             <button className="big gold" onClick={() => go('s5')}>
               Open lobby & queue →
             </button>
+            <div style={{ height: 10 }} />
+            <button className="big ghost" onClick={() => nav(`/tv/${code}`)}>
+              📺 Cast this room to a TV
+            </button>
             <p className="note">
               <b>Production note:</b> this room state (members, queue, votes) lives in one WebSocket
               room / Durable Object for small groups. The live arena is the same state machine behind

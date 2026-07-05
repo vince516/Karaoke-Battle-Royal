@@ -4,6 +4,7 @@ import ContestPage from './pages/ContestPage'
 import PartyPage from './pages/PartyPage'
 import SongLabPage from './pages/SongLabPage'
 import SingPickerPage from './pages/SingPickerPage'
+import TvPage from './pages/TvPage'
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
       {/* networked multi-device room (M2): synced score/hype/gifts/chat */}
       <Route path="/room/:code" element={<ContestPage />} />
       <Route path="/party" element={<PartyPage />} />
+      {/* big-screen / cast-to-TV view with a scannable join QR */}
+      <Route path="/tv" element={<TvPage />} />
+      <Route path="/tv/:code" element={<TvPage />} />
       <Route path="/songs" element={<SongLabPage />} />
       {/* /join/:code will deep-link straight into the guest PIN gate in M2 */}
       <Route path="/join/:code" element={<PartyPage />} />

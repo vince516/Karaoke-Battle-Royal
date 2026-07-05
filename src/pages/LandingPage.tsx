@@ -30,8 +30,8 @@ export default function LandingPage() {
             <Link to="/party" className="big gold" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
               📲 Host or join a party room
             </Link>
-            <Link to="/contest" className="big ghost" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
-              ▶ Watch the demo contest
+            <Link to="/tv" className="big ghost" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              📺 Cast to a TV (big screen)
             </Link>
           </div>
 

@@ -8,6 +8,7 @@ import './styles/base.css'
 import './styles/contest.css'
 import './styles/fpv.css'
 import './styles/party.css'
+import './styles/tv.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
