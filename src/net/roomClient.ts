@@ -12,6 +12,15 @@ export type RtcSignal =
 export type ServerMsg =
   | { t: 'state'; score: number; hypeTotal: number; msgCount: number; viewers: number; name: string; slots: number }
   | { t: 'gift'; kind: string; pts: number; em: string; stamp: string; cls: 'splat' | 'bloom' | 'gift'; from: string }
+  // scale mode: one aggregated frame per 500ms tick ("🍅 ×214")
+  | {
+      t: 'gifts'
+      counts: { kind: string; em: string; cls: 'splat' | 'bloom' | 'gift'; count: number }[]
+      score: number
+      hypeTotal: number
+      viewers: number
+      msgCount: number
+    }
   | { t: 'chat'; html: string; kind: string }
   // --- WebRTC signaling (M3) ---
   | { t: 'welcome'; selfId: string; peers: string[]; publisherId: string | null }

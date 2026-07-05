@@ -36,6 +36,8 @@ interface RoomState {
   floaters: Floater[]
   projectiles: Projectile[]
   stamps: { id: number; text: string; cls: 'splat' | 'bloom' | 'gift' }[]
+  // scale mode: aggregated "🍅 ×214" bursts instead of N projectiles
+  bursts: { id: number; em: string; count: number; cls: 'splat' | 'bloom' | 'gift' }[]
   toast: string
   stagePunch: number // increments to re-trigger the punch animation
 
@@ -66,6 +68,7 @@ interface RoomState {
   removeProjectile: (id: number) => void
   spawnStamp: (text: string, cls: 'splat' | 'bloom' | 'gift') => void
   removeStamp: (id: number) => void
+  removeBurst: (id: number) => void
   showToast: (text: string) => void
   setLineResults: (r: boolean[]) => void
   setMatch: (m: number) => void
@@ -102,6 +105,7 @@ export const useRoom = create<RoomState>((set, get) => ({
   floaters: [],
   projectiles: [],
   stamps: [],
+  bursts: [],
   toast: '',
   stagePunch: 0,
 
@@ -138,7 +142,7 @@ export const useRoom = create<RoomState>((set, get) => ({
       return
     }
     set((s) => ({
-      projectiles: [...s.projectiles, { id: nextId(), em: g.em, stamp: g.stamp, cls: g.cls }],
+      projectiles: [...s.projectiles, { id: nextId(), em: g.em, stamp: g.stamp, cls: g.cls }].slice(-14),
     }))
     get().addScore(g.pts, `${g.pts > 0 ? '+' : ''}${g.pts} ${g.em}`, g.pts > 0)
     get().bumpHype(Math.abs(g.pts) / 25 + 3)
@@ -209,6 +213,7 @@ export const useRoom = create<RoomState>((set, get) => ({
   spawnStamp: (text, cls) =>
     set((s) => ({ stamps: [...s.stamps, { id: nextId(), text, cls }] })),
   removeStamp: (id) => set((s) => ({ stamps: s.stamps.filter((st) => st.id !== id) })),
+  removeBurst: (id) => set((s) => ({ bursts: s.bursts.filter((b) => b.id !== id) })),
 
   showToast: (text) => {
     set({ toast: text })
@@ -239,8 +244,22 @@ export const useRoom = create<RoomState>((set, get) => ({
     if (msg.t === 'gift') {
       const plus = msg.pts > 0
       set((s) => ({
-        projectiles: [...s.projectiles, { id: nextId(), em: msg.em, stamp: msg.stamp, cls: msg.cls }],
-        floaters: [...s.floaters, { id: nextId(), label: `${plus ? '+' : ''}${msg.pts} ${msg.em}`, plus }],
+        // cap concurrent projectiles so a busy room never floods the DOM
+        projectiles: [...s.projectiles, { id: nextId(), em: msg.em, stamp: msg.stamp, cls: msg.cls }].slice(-14),
+        floaters: [...s.floaters, { id: nextId(), label: `${plus ? '+' : ''}${msg.pts} ${msg.em}`, plus }].slice(-14),
+        scoreZoom: true,
+      }))
+      setTimeout(() => set({ scoreZoom: false }), 200)
+      return
+    }
+    if (msg.t === 'gifts') {
+      // scale mode: render aggregated "🍅 ×214" bursts, never N nodes
+      set((s) => ({
+        score: msg.score,
+        hypeTotal: msg.hypeTotal,
+        viewers: msg.viewers,
+        msgCount: msg.msgCount,
+        bursts: [...s.bursts, ...msg.counts.map((c) => ({ id: nextId(), em: c.em, count: c.count, cls: c.cls }))].slice(-8),
         scoreZoom: true,
       }))
       setTimeout(() => set({ scoreZoom: false }), 200)

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRoom, tierOf } from '../../state/roomStore'
 import { BEAT } from '../../lib/songs'
+import { useHlsPlayback } from '../../hooks/useHlsPlayback'
 import { Projectile } from './Projectile'
 import { Stamp } from './Stamp'
 
@@ -19,12 +20,15 @@ export function Stage({
   stageRef,
   onTap,
   stream,
+  hlsUrl,
 }: {
   stageRef: React.RefObject<HTMLDivElement | null>
   onTap: () => void
   /** Live WebRTC stream (singer's camera). When present it becomes the
       full-bleed background, replacing the broadcast-rig fallback. */
   stream?: MediaStream | null
+  /** Scale-mode LL-HLS egress URL. Preferred over WebRTC when set. */
+  hlsUrl?: string | null
 }) {
   const projectiles = useRoom((s) => s.projectiles)
   const stamps = useRoom((s) => s.stamps)
@@ -37,11 +41,16 @@ export function Stage({
   const beatFlashRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const liveRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<HTMLVideoElement>(null)
 
-  // bind the live stream to the stage <video>
+  // bind the live WebRTC stream to the stage <video>
   useEffect(() => {
     if (liveRef.current) liveRef.current.srcObject = stream ?? null
   }, [stream])
+  // scale path: play the LL-HLS egress URL when present
+  useHlsPlayback(hlsRef, hlsUrl)
+
+  const hasLive = !!hlsUrl || !!stream
 
   // 16 crowd phone-lights with randomised drift (generated once)
   const bokeh = useMemo(
@@ -102,20 +111,29 @@ export function Stage({
   return (
     <div ref={stageRef} className="stage" id="stage" onClick={onTap}>
       <div ref={innerRef} style={{ position: 'absolute', inset: 0 }}>
-        {/* live WebRTC stream — the singer's real camera */}
+        {/* scale path: LL-HLS egress (CDN) — thousands of viewers */}
+        <video
+          ref={hlsRef}
+          className="feedv"
+          autoPlay
+          muted
+          playsInline
+          style={{ display: hlsUrl ? 'block' : 'none' }}
+        />
+        {/* party path: live WebRTC stream — the singer's real camera */}
         <video
           ref={liveRef}
           className="feedv"
           autoPlay
           muted
           playsInline
-          style={{ display: stream ? 'block' : 'none' }}
+          style={{ display: !hlsUrl && stream ? 'block' : 'none' }}
         />
-        {LIVE_VIDEO_URL && !stream ? (
+        {LIVE_VIDEO_URL && !hasLive ? (
           <video className="feedv" src={LIVE_VIDEO_URL} autoPlay muted loop playsInline />
         ) : null}
         {/* fallback broadcast rig when no one is on stage */}
-        <div ref={camRef} className={`camrig ${CUTS[cut]}`} style={{ display: stream ? 'none' : undefined }}>
+        <div ref={camRef} className={`camrig ${CUTS[cut]}`} style={{ display: hasLive ? 'none' : undefined }}>
           <img
             className="feed"
             src="https://randomuser.me/api/portraits/women/68.jpg"

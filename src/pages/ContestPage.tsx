@@ -18,6 +18,7 @@ import { GiftRail } from '../components/contest/GiftRail'
 import { ChatBubbles } from '../components/contest/ChatBubbles'
 import { ChatDrawer } from '../components/contest/ChatDrawer'
 import { Toast } from '../components/contest/Toast'
+import { GiftBursts } from '../components/contest/GiftBursts'
 import { SingerView } from '../components/singer/SingerView'
 
 /** A stable-ish anonymous identity per browser tab for this session. */
@@ -56,6 +57,9 @@ export default function ContestPage() {
   const [live, setLive] = useState(false)
   // the stage background = my camera if I'm the singer, else the singer's stream
   const stageStream = live ? media.stream : remoteStream
+
+  // scale viewer path: play the CDN LL-HLS egress when configured and not the singer
+  const hlsUrl = !live ? (import.meta.env.VITE_HLS_URL ?? null) : null
 
   const goLive = async () => {
     const s = await media.start()
@@ -105,7 +109,7 @@ export default function ContestPage() {
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
     >
-      <Stage stageRef={stageRef} onTap={toggle} stream={stageStream} />
+      <Stage stageRef={stageRef} onTap={toggle} stream={stageStream} hlsUrl={hlsUrl} />
       <div className="smflash" />
 
       {/* audience overlays */}
@@ -116,6 +120,7 @@ export default function ContestPage() {
       <HypeBar />
       <ToneLane song={GRAVITY_OF_YOU} networked={networked} />
       <ChatBubbles />
+      <GiftBursts />
       <GiftRail />
       <ChatDrawer />
       <Toast />

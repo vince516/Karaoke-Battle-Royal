@@ -45,6 +45,15 @@ interface RoomState {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+/* ---- scale-mode tuning ---- */
+// Below this many viewers, broadcast every gift immediately (party rooms
+// stay sub-300ms). At or above it, switch to aggregated 500ms ticks so
+// outbound message volume stays bounded no matter how hard the crowd gifts.
+const AGG_THRESHOLD = 40
+const AGG_MS = 500
+// Global cap on chat/system messages broadcast per second in scale mode.
+const CHAT_BROADCASTS_PER_SEC = 12
+
 export class Room {
   private sessions = new Set<Session>()
   private state: RoomState | null = null
@@ -52,6 +61,16 @@ export class Room {
   private nextId = 0
   /** session id currently publishing camera/mic (the live singer), or null */
   private publisherId: string | null = null
+
+  /* scale-mode aggregation state */
+  private pendingGifts: Record<string, number> = {}
+  private aggTimer: ReturnType<typeof setInterval> | null = null
+  private chatBudget = CHAT_BROADCASTS_PER_SEC
+  private chatBudgetAt = 0
+
+  private get largeMode() {
+    return this.sessions.size >= AGG_THRESHOLD
+  }
 
   constructor(_state: DurableObjectState, _env: unknown) {}
 
@@ -109,17 +128,19 @@ export class Room {
     ws.addEventListener('close', drop)
     ws.addEventListener('error', drop)
 
-    // WebRTC bootstrap: tell the newcomer who it is, who else is here, and
-    // whether someone is already publishing (the live singer).
+    // WebRTC bootstrap. The mesh is only for party-room scale; above the
+    // threshold viewers take the HLS egress, so we skip the O(N) peer
+    // fan-out entirely (otherwise a big ramp is O(N²)).
     this.safeSend(sess, {
       t: 'welcome',
       selfId: sess.id,
-      peers: [...this.sessions].filter((x) => x !== sess).map((x) => x.id),
+      peers: this.largeMode ? [] : [...this.sessions].filter((x) => x !== sess).map((x) => x.id),
       publisherId: this.publisherId,
     })
-    // announce this peer to everyone else so publishers can offer them media
-    for (const other of this.sessions) {
-      if (other !== sess) this.safeSend(other, { t: 'peer-join', id: sess.id })
+    if (!this.largeMode) {
+      for (const other of this.sessions) {
+        if (other !== sess) this.safeSend(other, { t: 'peer-join', id: sess.id })
+      }
     }
 
     this.sendState(sess) // snapshot to the newcomer
@@ -139,13 +160,18 @@ export class Room {
       case 'hello': {
         sess.name = String(msg.name || 'Guest').slice(0, 16)
         sess.color = String(msg.color || '#FFB300')
-        this.broadcastEvent({
-          t: 'chat',
-          html: `👋 <span class="u" style="color:${sess.color}">${escapeHtml(sess.name)}</span> joined`,
-          kind: 'sys-gold',
-        })
-        s.msgCount++
-        this.broadcastState()
+        // Announce joins only at party-room scale. At contest scale a
+        // per-join broadcast is O(N²) over a ramp — viewer counts ride the
+        // heartbeat instead.
+        if (!this.largeMode) {
+          this.broadcastEvent({
+            t: 'chat',
+            html: `👋 <span class="u" style="color:${sess.color}">${escapeHtml(sess.name)}</span> joined`,
+            kind: 'sys-gold',
+          })
+          s.msgCount++
+          this.broadcastState()
+        }
         break
       }
       case 'gift': {
@@ -159,39 +185,48 @@ export class Room {
         }
         s.score = Math.max(0, s.score + g.pts)
         s.hypeTotal += Math.abs(g.pts) / 25 + 3
-        this.broadcastEvent({
-          t: 'gift',
-          kind: String(msg.kind),
-          pts: g.pts,
-          em: g.em,
-          stamp: g.stamp,
-          cls: g.cls,
-          from: sess.name,
-        })
         s.msgCount++
-        this.broadcastEvent({
-          t: 'chat',
-          html: `${g.em} <span class="u" style="color:${sess.color}">@${escapeHtml(sess.name)}</span> · ${g.pts > 0 ? '+' : ''}${g.pts} pts`,
-          kind: g.pts > 0 ? 'sys-gold' : 'sys-tomato',
-        })
-        this.broadcastState()
+        if (this.largeMode) {
+          // scale mode: accumulate; the 500ms tick emits one aggregated frame
+          this.pendingGifts[String(msg.kind)] = (this.pendingGifts[String(msg.kind)] || 0) + 1
+        } else {
+          // party-room mode: per-gift projectile + chat line, immediate
+          this.broadcastEvent({
+            t: 'gift',
+            kind: String(msg.kind),
+            pts: g.pts,
+            em: g.em,
+            stamp: g.stamp,
+            cls: g.cls,
+            from: sess.name,
+          })
+          this.broadcastEvent({
+            t: 'chat',
+            html: `${g.em} <span class="u" style="color:${sess.color}">@${escapeHtml(sess.name)}</span> · ${g.pts > 0 ? '+' : ''}${g.pts} pts`,
+            kind: g.pts > 0 ? 'sys-gold' : 'sys-tomato',
+          })
+          this.broadcastState()
+        }
         break
       }
       case 'chat': {
         const text = String(msg.text || '').slice(0, 120)
         if (!text.trim()) return
-        // rate-limit: max 5 messages / 5s per session
+        // per-session rate-limit: max 5 messages / 5s
         const now = Date.now()
         sess.chatTimes = sess.chatTimes.filter((t) => now - t < 5000)
         if (sess.chatTimes.length >= 5) return
         sess.chatTimes.push(now)
         s.msgCount++
+        // scale mode: a global token bucket samples chat so fan-out stays
+        // bounded (clients cap render at 60 anyway).
+        if (this.largeMode && !this.takeChatToken(now)) break
         this.broadcastEvent({
           t: 'chat',
           html: `<span class="u" style="color:${sess.color}">@${escapeHtml(sess.name)}</span>: ${escapeHtml(text)}`,
           kind: 'user',
         })
-        this.broadcastState()
+        if (!this.largeMode) this.broadcastState()
         break
       }
       // ---- WebRTC signaling ----
@@ -229,9 +264,13 @@ export class Room {
       this.publisherId = null
       this.broadcastEvent({ t: 'publisher', id: null })
     }
-    this.broadcastEvent({ t: 'peer-leave', id: sess.id })
+    // mesh teardown only matters at party-room scale; at large scale the
+    // periodic state tick already reflects the new viewer count.
+    if (!this.largeMode) {
+      this.broadcastEvent({ t: 'peer-leave', id: sess.id })
+      if (this.sessions.size > 0) this.broadcastState()
+    }
     if (this.sessions.size === 0) this.stopDecay()
-    else this.broadcastState()
   }
 
   private snapshot() {
@@ -266,20 +305,62 @@ export class Room {
   }
 
   private startDecay() {
-    if (this.decayTimer) return
-    // endless hype decays ~1.5 every 2.6s, server-authoritative
-    this.decayTimer = setInterval(() => {
-      const s = this.state!
-      if (s.hypeTotal > 0) {
-        s.hypeTotal = Math.max(0, s.hypeTotal - 1.5)
+    if (!this.decayTimer) {
+      // endless hype decays ~1.5 every 2.6s, server-authoritative
+      this.decayTimer = setInterval(() => {
+        const s = this.state!
+        if (s.hypeTotal > 0) s.hypeTotal = Math.max(0, s.hypeTotal - 1.5)
+        // also a heartbeat so viewer counts stay fresh at scale (bounded: 1 / 2.6s)
         this.broadcastState()
-      }
-    }, 2600)
+      }, 2600)
+    }
+    if (!this.aggTimer) {
+      // scale mode: flush aggregated gifts once per tick — one bounded frame
+      // to every viewer, no matter how many gifts arrived this window.
+      this.aggTimer = setInterval(() => this.flushGifts(), AGG_MS)
+    }
   }
   private stopDecay() {
     if (this.decayTimer) {
       clearInterval(this.decayTimer)
       this.decayTimer = null
     }
+    if (this.aggTimer) {
+      clearInterval(this.aggTimer)
+      this.aggTimer = null
+    }
+  }
+
+  /** Emit one aggregated "🍅 ×214" frame carrying the authoritative state. */
+  private flushGifts() {
+    const kinds = Object.keys(this.pendingGifts)
+    if (kinds.length === 0) return
+    const counts = kinds.map((k) => ({
+      kind: k,
+      em: GIFTS[k].em,
+      cls: GIFTS[k].cls,
+      count: this.pendingGifts[k],
+    }))
+    this.pendingGifts = {}
+    const s = this.state!
+    this.broadcastEvent({
+      t: 'gifts',
+      counts,
+      score: s.score,
+      hypeTotal: s.hypeTotal,
+      viewers: this.sessions.size,
+      msgCount: s.msgCount,
+    })
+  }
+
+  /** Refill-per-second token bucket gating chat fan-out in scale mode. */
+  private takeChatToken(now: number): boolean {
+    if (now - this.chatBudgetAt >= 1000) {
+      this.chatBudget = CHAT_BROADCASTS_PER_SEC
+      this.chatBudgetAt = now
+    }
+    if (this.chatBudget <= 0) return false
+    this.chatBudget--
+    return true
   }
 }

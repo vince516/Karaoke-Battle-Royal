@@ -10,7 +10,23 @@ and a QR party-room join flow.
 > live video stream. Every other element — tone lane, gifts, score, hype, chat
 > — is an overlay on top of that stream.
 
-## Status — M1 ✅ · M2 (rooms) ✅ · M3 (live video) ✅
+## Status — M1 ✅ · M2 rooms ✅ · M3 live video ✅ · M5 scale ✅
+
+**M5 — scale mode (Twitch-like volume).** Above a viewer threshold the room
+switches from per-event broadcast to **server-side aggregation**: gifts batch
+into one 500 ms tick (`🍅 ×214` bursts, never N DOM nodes), joins stop
+announcing per-viewer (was O(N²) on a ramp), and chat fan-out is rate-capped.
+The result: **per-viewer inbound message rate is bounded and independent of
+crowd size.** Load-tested locally — 500 concurrent WebSocket viewers, ~1,000
+gifts/sec collapses to **~2 aggregated frames/sec/viewer (≈490× reduction)**,
+2.3 msgs/sec/viewer total, all connections stable. (500 is the sandbox's file-
+descriptor ceiling on `workerd`; the aggregation is O(1) per viewer per tick, so
+it holds at far higher counts.) The media path scales via an **LL-HLS egress**
+URL (`VITE_HLS_URL`, played through hls.js, lazily loaded) — WebRTC mesh for
+party rooms, HLS/CDN for the contest firehose. `node scripts/loadtest.mjs` runs
+the test.
+
+
 
 **M3 — live WebRTC video.** The singer's real camera (`getUserMedia`) becomes
 the full-bleed stage background and is published to every viewer over **real
@@ -88,6 +104,13 @@ npm run build    # type-check + production build
 
 Mobile-first 9:16 — best viewed in a phone-sized viewport.
 
+### Scale load test
+
+```bash
+npm run server                     # wrangler dev
+node scripts/loadtest.mjs 500 40 6 # 500 viewers, 40 gifters, 6s window
+```
+
 ## Architecture (built to grow into M2–M5)
 
 - **`src/state/roomStore.ts`** — the client mirror of a room's authoritative
@@ -117,8 +140,9 @@ Mobile-first 9:16 — best viewed in a phone-sized viewport.
   come: opponent/duet PiP and queue auto-advance.
 - **M4 — Real tone engine:** client-side pitch detection, shared pitch frames,
   server-scored lines, LRC+melody song loader.
-- **M5 — Scale mode:** LL-HLS viewer path, server-side gift aggregation ticks,
-  load test.
+- **M5 — Scale mode:** ✅ server-side gift aggregation ticks, bounded fan-out
+  (join/leave/chat), LL-HLS viewer path (`useHlsPlayback` + hls.js), 500-viewer
+  load test. (`worker/room.ts`, `scripts/loadtest.mjs`.)
 
 ## Prototype
 

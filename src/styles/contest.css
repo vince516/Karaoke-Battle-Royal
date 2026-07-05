@@ -665,6 +665,42 @@ canvas.tone {
 .stamp.bloom { background: var(--bloom); color: #40001a; }
 .stamp.gift { background: var(--gold); color: #3a2800; }
 
+/* aggregated gift bursts (scale mode): "🍅 ×214" */
+.bursts-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+}
+.burst {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  font-family: 'Archivo';
+  font-weight: 900;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transform: scale(0.4);
+  opacity: 0;
+  animation: burstpop 1.5s cubic-bezier(0.2, 1.5, 0.4, 1) forwards;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+}
+.burst .be { font-size: 26px; }
+.burst .bc { font-size: 18px; }
+.burst.splat { color: var(--splat); border-color: rgba(255, 83, 48, 0.6); }
+.burst.bloom { color: var(--bloom); border-color: rgba(255, 122, 168, 0.6); }
+.burst.gift { color: var(--gold); border-color: rgba(255, 179, 0, 0.6); }
+@keyframes burstpop {
+  12% { transform: scale(1.15); opacity: 1; }
+  28% { transform: scale(1); }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1) translateY(-30px); }
+}
+
 /* up next + chat bubbles (TikTok: comments bottom-left) */
 .upnext {
   position: fixed;
