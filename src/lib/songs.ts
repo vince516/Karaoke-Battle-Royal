@@ -76,10 +76,78 @@ const FOUR_AM_FLOOR: Song = {
   ],
 }
 
-/** Song catalogue — generic originals only. Each has its own lyrics +
-    melody. No named titles or public-domain IP; zero royalty of any kind.
-    (Rows map to a C-major scale: 0=C 1=D 2=E 3=F 4=G 5=A 6=B 7=C' 8=D'.) */
+/* ---- Familiar public-domain classics — royalty-free AND known by heart, so
+   you can actually sing them to test the pitch tracking. Rows are C-major
+   scale degrees: 0=C 1=D 2=E 3=F 4=G 5=A 6=B 7=C' 8=D'. ---- */
+const TWINKLE: Song = {
+  id: 'twinkle-star', title: 'Twinkle, Twinkle, Little Star', desc: 'Nursery classic · public domain', icon: '⭐', duration: '1:20',
+  lines: [
+    { t: 'Twinkle, twinkle, little star', mel: [[0, 1], [0, 1], [4, 1], [4, 1], [5, 1], [5, 1], [4, 2]] },
+    { t: 'How I wonder what you are', mel: [[3, 1], [3, 1], [2, 1], [2, 1], [1, 1], [1, 1], [0, 2]] },
+    { t: 'Up above the world so high', mel: [[4, 1], [4, 1], [3, 1], [3, 1], [2, 1], [2, 1], [1, 2]] },
+    { t: 'Like a diamond in the sky', mel: [[4, 1], [4, 1], [3, 1], [3, 1], [2, 1], [2, 1], [1, 2]] },
+    { t: 'Twinkle, twinkle, little star', mel: [[0, 1], [0, 1], [4, 1], [4, 1], [5, 1], [5, 1], [4, 2]] },
+    { t: 'How I wonder what you are', mel: [[3, 1], [3, 1], [2, 1], [2, 1], [1, 1], [1, 1], [0, 2]] },
+  ],
+}
+const MARY_LAMB: Song = {
+  id: 'mary-lamb', title: 'Mary Had a Little Lamb', desc: 'Nursery classic · public domain', icon: '🐑', duration: '1:10',
+  lines: [
+    { t: 'Mary had a little lamb', mel: [[2, 1], [1, 1], [0, 1], [1, 1], [2, 1], [2, 1], [2, 2]] },
+    { t: 'Little lamb, little lamb', mel: [[1, 1], [1, 1], [1, 2], [2, 1], [4, 1], [4, 2]] },
+    { t: 'Mary had a little lamb', mel: [[2, 1], [1, 1], [0, 1], [1, 1], [2, 1], [2, 1], [2, 1], [2, 1]] },
+    { t: 'Its fleece was white as snow', mel: [[1, 1], [1, 1], [2, 1], [1, 1], [0, 2]] },
+  ],
+}
+const HAPPY_BIRTHDAY: Song = {
+  id: 'happy-birthday', title: 'Happy Birthday', desc: 'Public domain since 2016', icon: '🎂', duration: '0:40',
+  lines: [
+    { t: 'Happy birthday to you', mel: [[4, 1], [4, 1], [5, 2], [4, 2], [7, 2], [6, 3]] },
+    { t: 'Happy birthday to you', mel: [[4, 1], [4, 1], [5, 2], [4, 2], [8, 2], [7, 3]] },
+    { t: 'Happy birthday dear friend', mel: [[4, 1], [4, 1], [8, 2], [6, 2], [5, 1], [4, 2]] },
+    { t: 'Happy birthday to you', mel: [[3, 1], [3, 1], [6, 2], [7, 2], [6, 2], [4, 3]] },
+  ],
+}
+const ODE_TO_JOY: Song = {
+  id: 'ode-to-joy', title: 'Ode to Joy', desc: 'Beethoven · public domain', icon: '🎼', duration: '1:40',
+  lines: [
+    { t: 'Joyful, joyful, we adore Thee', mel: [[2, 1], [2, 1], [3, 1], [4, 1], [4, 1], [3, 1], [2, 1], [1, 1]] },
+    { t: 'God of glory, Lord of love', mel: [[0, 1], [0, 1], [1, 1], [2, 1], [2, 1], [1, 1], [1, 2]] },
+    { t: 'Hearts unfold like flowers before Thee', mel: [[2, 1], [2, 1], [3, 1], [4, 1], [4, 1], [3, 1], [2, 1], [1, 1]] },
+    { t: 'Opening to the sun above', mel: [[0, 1], [0, 1], [1, 1], [2, 1], [1, 1], [0, 1], [0, 2]] },
+  ],
+}
+const JINGLE_BELLS: Song = {
+  id: 'jingle-bells', title: 'Jingle Bells', desc: 'Holiday classic · public domain', icon: '🔔', duration: '1:30',
+  lines: [
+    { t: 'Jingle bells, jingle bells', mel: [[2, 1], [2, 1], [2, 2], [2, 1], [2, 1], [2, 2]] },
+    { t: 'Jingle all the way', mel: [[2, 1], [4, 1], [0, 1], [1, 1], [2, 3]] },
+    { t: 'Oh what fun it is to ride', mel: [[3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [2, 1], [2, 1], [2, 1]] },
+    { t: 'In a one-horse open sleigh', mel: [[2, 1], [1, 1], [1, 1], [2, 1], [1, 1], [4, 2]] },
+  ],
+}
+
+const LUPANG_HINIRANG: Song = {
+  id: 'lupang-hinirang', title: 'Lupang Hinirang', desc: 'Philippine anthem · public domain', icon: '🇵🇭', duration: '1:20',
+  lines: [
+    // solfège fa-mi-sol-fa-do → rows 3-2-4-3-0
+    { t: 'Bayang magiliw', mel: [[3, 2], [2, 2], [4, 2], [3, 2], [0, 3]] },
+    // so-la-ti-la-so-la-fa
+    { t: 'Perlas ng silanganan', mel: [[4, 2], [5, 2], [6, 2], [5, 1], [4, 1], [5, 2], [3, 3]] },
+    { t: 'Alab ng puso', mel: [[3, 2], [2, 2], [4, 2], [3, 2], [0, 3]] },
+    { t: "Sa dibdib mo'y buhay", mel: [[5, 2], [6, 2], [7, 2], [6, 1], [5, 1], [4, 3]] },
+  ],
+}
+
+/** Song catalogue — familiar public-domain singalongs (great for testing the
+    tone engine) + generic originals. All royalty-free. */
 export const SONG_CATALOGUE: Song[] = [
+  LUPANG_HINIRANG,
+  HAPPY_BIRTHDAY,
+  MARY_LAMB,
+  TWINKLE,
+  ODE_TO_JOY,
+  JINGLE_BELLS,
   GRAVITY_OF_YOU,
   MIDNIGHT_RUN,
   PAPER_CROWNS,
@@ -87,8 +155,10 @@ export const SONG_CATALOGUE: Song[] = [
   FOUR_AM_FLOOR,
 ]
 
-/** No non-original songs in the catalogue (kept so the picker tag compiles). */
-export const CLASSIC_IDS = new Set<string>()
+/** Public-domain classics (vs originals) — for the picker tag. */
+export const CLASSIC_IDS = new Set<string>([
+  'lupang-hinirang', 'happy-birthday', 'mary-lamb', 'twinkle-star', 'ode-to-joy', 'jingle-bells',
+])
 
 /* ================= DIFFICULTY ================= */
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'pro'
