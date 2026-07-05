@@ -64,3 +64,7 @@ export function hzToLane(hz: number): number {
   const span = 12 * Math.log2(HI / LO)
   return Math.max(0, Math.min(1, 1 - semis / span))
 }
+/** Tone-lane row (0..8, low→high) → frequency, inverse of hzToLane. */
+export function noteToHz(note: number): number {
+  return LO * Math.pow(2, note / 4) // 8 rows across the two-octave window
+}

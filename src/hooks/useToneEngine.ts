@@ -1,6 +1,6 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import type { Song, SongLine } from '../lib/types'
-import { BEAT, NOTES } from '../lib/songs'
+import { BEAT, NOTES, DIFFICULTY, type DiffSpec } from '../lib/songs'
 import { useRoom } from '../state/roomStore'
 import { hzToLane } from './usePitchDetection'
 
@@ -39,7 +39,16 @@ export function useToneEngine(
   /** When networked, the tone lane is a local visual only — score/hype
       are server-authoritative, so we don't mutate them here. */
   networked = false,
+  /** Fired at each melody-segment onset so a synth can play the note. */
+  onSegment?: (note: number, durMs: number) => void,
+  /** Pitch-tracking strictness (contest = pro). */
+  diff: DiffSpec = DIFFICULTY.normal,
 ) {
+  const segCb = useRef(onSegment)
+  segCb.current = onSegment
+  const diffRef = useRef(diff)
+  diffRef.current = diff
+
   useEffect(() => {
     const cv = canvasRef.current
     if (!cv) return
@@ -53,6 +62,7 @@ export function useToneEngine(
     let lineResults: boolean[] = []
     let lineAcc: number[] = []
     let singerY = 38 // mid-canvas
+    let lastSegKey = -1 // fire the melody synth once per segment onset
 
     const room = useRoom.getState
     room().setLineResults([])
@@ -83,7 +93,7 @@ export function useToneEngine(
 
     function endLine() {
       const acc = lineAcc.length ? lineAcc.reduce((a, b) => a + b, 0) / lineAcc.length : 0
-      const pass = acc >= 0.62
+      const pass = acc >= diffRef.current.pass
       lineResults = [...lineResults, pass]
       const pts = Math.round(acc * 300)
       if (!networked) {
@@ -149,11 +159,19 @@ export function useToneEngine(
       const speed = (W * 0.9) / dur
       let t = 0
       ctx.lineCap = 'round'
-      for (const [n, len] of L.mel) {
+      L.mel.forEach(([n, len], si) => {
         const x0 = headX + (t - ms) * speed
         const x1 = headX + (t + len * BEAT - ms) * speed
         const y = 12 + (H - 24) * (1 - n / (NOTES - 1))
         const active = ms >= t && ms < t + len * BEAT
+        // note onset → play the guide-melody note (once per segment)
+        if (active) {
+          const key = lineIdx * 100 + si
+          if (key !== lastSegKey) {
+            lastSegKey = key
+            segCb.current?.(n, len * BEAT)
+          }
+        }
         ctx.strokeStyle = active ? '#FFB300' : 'rgba(255,255,255,.28)'
         ctx.lineWidth = active ? 12 : 9
         ctx.beginPath()
@@ -161,7 +179,7 @@ export function useToneEngine(
         ctx.lineTo(Math.min(x1 - 6, W + 40), y)
         ctx.stroke()
         t += len * BEAT
-      }
+      })
 
       // singer pitch: REAL shared mic pitch if a fresh frame exists
       // (M4 — everyone sees the same dot), else the simulated fallback.
@@ -177,8 +195,8 @@ export function useToneEngine(
         singerY += (target + wobble + drift - singerY) * 0.18
       }
       const dist = Math.abs(singerY - target)
-      const onTone = dist < 14
-      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / 40))
+      const onTone = dist < diffRef.current.tol
+      lineAcc.push(onTone ? 1 : Math.max(0, 1 - dist / diffRef.current.span))
 
       // head dot + trail
       ctx.fillStyle = onTone ? 'rgba(23,232,160,.9)' : 'rgba(255,83,48,.9)'

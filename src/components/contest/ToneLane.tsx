@@ -1,9 +1,20 @@
 import { useRef } from 'react'
 import type { Song } from '../../lib/types'
+import { DIFFICULTY, type DiffSpec } from '../../lib/songs'
 import { useRoom } from '../../state/roomStore'
 import { useToneEngine } from '../../hooks/useToneEngine'
 
-export function ToneLane({ song, networked = false }: { song: Song; networked?: boolean }) {
+export function ToneLane({
+  song,
+  networked = false,
+  onSegment,
+  diff = DIFFICULTY.normal,
+}: {
+  song: Song
+  networked?: boolean
+  onSegment?: (note: number, durMs: number) => void
+  diff?: DiffSpec
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const baseRef = useRef<HTMLSpanElement>(null)
   const fillRef = useRef<HTMLSpanElement>(null)
@@ -11,7 +22,7 @@ export function ToneLane({ song, networked = false }: { song: Song; networked?: 
   const match = useRoom((s) => s.match)
   const lineResults = useRoom((s) => s.lineResults)
 
-  useToneEngine(canvasRef, baseRef, fillRef, song, networked)
+  useToneEngine(canvasRef, baseRef, fillRef, song, networked, onSegment, diff)
 
   const now = lineResults.length // the next unfinished line is "now"
 
@@ -19,6 +30,7 @@ export function ToneLane({ song, networked = false }: { song: Song; networked?: 
     <div className="tonewrap">
       <div className="tonehead">
         <span className="tl">FOLLOW THE TONE</span>
+        <span className="difftag">{diff.label.toUpperCase()}</span>
         <span className={`match num${match < 62 ? ' off' : ''}`}>{match}%</span>
         <span className="linesdone">
           {song.lines.map((_, i) => {
@@ -35,8 +47,12 @@ export function ToneLane({ song, networked = false }: { song: Song; networked?: 
       </div>
       <canvas ref={canvasRef} className="tone" />
       <div className="lyricline">
-        <span className="base" ref={baseRef} />
-        <span className="fill" ref={fillRef} />
+        {/* inline-block wrapper shrink-wraps the text so the gold "fill"
+            wipe overlays the grey base exactly (no doubled/offset text) */}
+        <span className="lwrap">
+          <span className="base" ref={baseRef} />
+          <span className="fill" ref={fillRef} />
+        </span>
       </div>
     </div>
   )

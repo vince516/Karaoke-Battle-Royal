@@ -6,8 +6,9 @@ import { useSimulatedRoom } from '../hooks/useSimulatedRoom'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import { useMedia } from '../hooks/useMedia'
 import { useWebRTC } from '../hooks/useWebRTC'
-import { usePitchDetection } from '../hooks/usePitchDetection'
-import { TIERS, GRAVITY_OF_YOU, GUEST_COLORS } from '../lib/songs'
+import { usePitchDetection, noteToHz } from '../hooks/usePitchDetection'
+import { useMelodySynth } from '../hooks/useMelodySynth'
+import { TIERS, GRAVITY_OF_YOU, GUEST_COLORS, DIFFICULTY, type Difficulty } from '../lib/songs'
 import { loadSong } from '../lib/songSource'
 import type { Song } from '../lib/types'
 import { Stage } from '../components/contest/Stage'
@@ -53,6 +54,10 @@ export default function ContestPage() {
   useRoomSocket(code, identity)
   useSimulatedRoom(mode === 'sim')
 
+  // --- difficulty: solo picks; the room (real contest) is Pro level ---
+  const [soloDiff, setSoloDiff] = useState<Difficulty>('normal')
+  const diff = mode === 'room' ? DIFFICULTY.pro : mode === 'solo' ? DIFFICULTY[soloDiff] : DIFFICULTY.normal
+
   // --- chosen song (solo loads from the catalogue) ---
   const [song, setSong] = useState<Song>(GRAVITY_OF_YOU)
   useEffect(() => {
@@ -66,8 +71,12 @@ export default function ContestPage() {
   const [live, setLive] = useState(false)
   const stageStream = live ? media.stream : remoteStream
 
+  // guide-melody synth (plays the song's notes so there's music to sing to)
+  const synth = useMelodySynth()
+
   // solo: one tap starts camera + mic and the song
   const startSolo = async () => {
+    synth.unlock() // AudioContext must resume from a user gesture
     const s = await media.start()
     if (s) {
       setLive(true)
@@ -138,7 +147,12 @@ export default function ContestPage() {
       {mode !== 'solo' && <UpNext />}
 
       <HypeBar />
-      <ToneLane song={mode === 'solo' ? song : GRAVITY_OF_YOU} networked={networked} />
+      <ToneLane
+        song={mode === 'solo' ? song : GRAVITY_OF_YOU}
+        networked={networked}
+        diff={diff}
+        onSegment={mode === 'solo' && live ? (note, durMs) => synth.playNote(noteToHz(note), durMs) : undefined}
+      />
 
       {/* crowd + gifts belong to the demo/room, not solo karaoke */}
       {mode !== 'solo' && (
@@ -157,6 +171,13 @@ export default function ContestPage() {
           <div className="sg-song">{song.icon} {song.title}</div>
           <h2>Ready to sing?</h2>
           <p>Grant camera &amp; mic — your camera becomes the stage and your voice rides the tone lane.</p>
+          <div className="diffpick">
+            {(Object.keys(DIFFICULTY) as Difficulty[]).map((d) => (
+              <button key={d} className={soloDiff === d ? 'on' : ''} onClick={() => setSoloDiff(d)}>
+                {DIFFICULTY[d].label}
+              </button>
+            ))}
+          </div>
           <button className="startbtn" onClick={startSolo}>🎤 Start singing</button>
           {media.error && <div className="err">⚠️ {media.error} — check browser permissions</div>}
         </div>
@@ -165,6 +186,9 @@ export default function ContestPage() {
       {/* solo mic/cam controls */}
       {mode === 'solo' && live && (
         <div className="fpvcontrols" style={{ zIndex: 30 }}>
+          <button className={`ctrlbtn${synth.muted ? ' off' : ''}`} onClick={synth.toggle} aria-label="Music">
+            {synth.muted ? '🎵' : '🎶'}
+          </button>
           <button className={`ctrlbtn${media.micOn ? '' : ' off'}`} onClick={media.toggleMic} aria-label="Mic">
             {media.micOn ? '🎙️' : '🔇'}
           </button>

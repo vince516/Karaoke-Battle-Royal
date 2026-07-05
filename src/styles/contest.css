@@ -354,6 +354,15 @@
   transition: color 0.2s;
 }
 .match.off { color: var(--splat); }
+.difftag {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  color: var(--gold);
+  border: 1px solid rgba(255, 179, 0, 0.5);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
 .linesdone {
   margin-left: auto;
   display: flex;
@@ -399,12 +408,20 @@ canvas.tone {
   font-family: 'Archivo';
   font-weight: 900;
   font-size: clamp(15px, 2.6vw, 20px);
+}
+/* shrink-wrap the text; the gold fill is clipped over the base, aligned */
+.lyricline .lwrap {
   position: relative;
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
 }
 .lyricline .base { color: rgba(255, 255, 255, 0.38); }
 .lyricline .fill {
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
   overflow: hidden;
   width: 0%;
   white-space: nowrap;

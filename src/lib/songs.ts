@@ -85,6 +85,25 @@ export const SONG_CATALOGUE: Song[] = [
   FOUR_AM_FLOOR,
 ]
 
+/* ================= DIFFICULTY ================= */
+export type Difficulty = 'easy' | 'normal' | 'hard' | 'pro'
+export interface DiffSpec {
+  label: string
+  /** on-tone pixel tolerance (smaller = stricter). */
+  tol: number
+  /** partial-credit falloff span. */
+  span: number
+  /** line pass threshold (accuracy 0..1). */
+  pass: number
+}
+/** Pitch-tracking strictness. Pro = contest / professional level. */
+export const DIFFICULTY: Record<Difficulty, DiffSpec> = {
+  easy: { label: 'Easy', tol: 26, span: 64, pass: 0.5 },
+  normal: { label: 'Normal', tol: 18, span: 46, pass: 0.62 },
+  hard: { label: 'Hard', tol: 12, span: 34, pass: 0.72 },
+  pro: { label: 'Pro', tol: 8, span: 26, pass: 0.82 },
+}
+
 /* ================= GIFTS = POINTS ================= */
 export const GIFTS: Record<GiftKind, GiftDef> = {
   tomato: { pts: -50, em: '🍅', stamp: 'SPLAT!', cls: 'splat', cooldown: 30, label: '30s' },
