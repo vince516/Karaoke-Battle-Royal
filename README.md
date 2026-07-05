@@ -10,7 +10,19 @@ and a QR party-room join flow.
 > live video stream. Every other element — tone lane, gifts, score, hype, chat
 > — is an overlay on top of that stream.
 
-## Status — M1 (static parity) ✅ · M2 (rooms) ✅
+## Status — M1 ✅ · M2 (rooms) ✅ · M3 (live video) ✅
+
+**M3 — live WebRTC video.** The singer's real camera (`getUserMedia`) becomes
+the full-bleed stage background and is published to every viewer over **real
+WebRTC** — SDP/ICE relayed through the room Durable Object, no external SFU
+(a mesh, right for the ≤ ~50-viewer party rooms; SFU + LL-HLS is M5). Swipe (or
+the page dots) between the audience view and the **singer FPV**: mirrored
+self-cam, giant lyrics + "🎤 YOUR PART" pill, get-ready dots, mic/cam/end-set
+controls, and incoming-gift banners. Verified two browsers: singer goes live,
+viewer receives the live track as its background in **~850 ms**. When the singer
+ends the set the room falls back to the broadcast rig.
+
+
 
 **M2 — real multi-device rooms.** A Cloudflare Worker + Durable Object (one DO
 per room code) owns the authoritative room state and broadcasts over WebSocket.
@@ -98,9 +110,11 @@ Mobile-first 9:16 — best viewed in a phone-sized viewport.
 - **M2 — Rooms:** ✅ Cloudflare Worker + Durable Objects room state, WebSocket
   sync of chat/gifts/points/hype/viewers across devices, server-side cooldowns
   and rate-limits. (`worker/`, `src/net/`, `src/hooks/useRoomSocket.ts`.)
-- **M3 — Live video:** WebRTC publish/subscribe (LiveKit or Cloudflare Calls);
-  singer's real camera as the background; auto-advance queue; singer FPV view
-  (`arena.html` — swipe pager, mirrored self-cam, "YOUR PART" pill, opponent PiP).
+- **M3 — Live video:** ✅ WebRTC publish/subscribe (mesh, signaled via the room
+  DO), singer's real camera as the background, singer FPV view with swipe pager
+  and mic/cam/end-set controls. (`worker/room.ts` signaling, `src/net/webrtc.ts`,
+  `src/hooks/useMedia.ts` + `useWebRTC.ts`, `src/components/singer/`.) Still to
+  come: opponent/duet PiP and queue auto-advance.
 - **M4 — Real tone engine:** client-side pitch detection, shared pitch frames,
   server-scored lines, LRC+melody song loader.
 - **M5 — Scale mode:** LL-HLS viewer path, server-side gift aggregation ticks,

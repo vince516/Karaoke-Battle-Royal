@@ -50,6 +50,8 @@ export class Room {
   private state: RoomState | null = null
   private decayTimer: ReturnType<typeof setInterval> | null = null
   private nextId = 0
+  /** session id currently publishing camera/mic (the live singer), or null */
+  private publisherId: string | null = null
 
   constructor(_state: DurableObjectState, _env: unknown) {}
 
@@ -106,6 +108,19 @@ export class Room {
     const drop = () => this.onClose(sess)
     ws.addEventListener('close', drop)
     ws.addEventListener('error', drop)
+
+    // WebRTC bootstrap: tell the newcomer who it is, who else is here, and
+    // whether someone is already publishing (the live singer).
+    this.safeSend(sess, {
+      t: 'welcome',
+      selfId: sess.id,
+      peers: [...this.sessions].filter((x) => x !== sess).map((x) => x.id),
+      publisherId: this.publisherId,
+    })
+    // announce this peer to everyone else so publishers can offer them media
+    for (const other of this.sessions) {
+      if (other !== sess) this.safeSend(other, { t: 'peer-join', id: sess.id })
+    }
 
     this.sendState(sess) // snapshot to the newcomer
     this.startDecay()
@@ -179,6 +194,25 @@ export class Room {
         this.broadcastState()
         break
       }
+      // ---- WebRTC signaling ----
+      case 'publish': {
+        this.publisherId = sess.id
+        this.broadcastEvent({ t: 'publisher', id: sess.id })
+        break
+      }
+      case 'unpublish': {
+        if (this.publisherId === sess.id) {
+          this.publisherId = null
+          this.broadcastEvent({ t: 'publisher', id: null })
+        }
+        break
+      }
+      case 'rtc': {
+        // relay an SDP offer/answer or ICE candidate to one specific peer
+        const target = [...this.sessions].find((x) => x.id === msg.to)
+        if (target) this.safeSend(target, { t: 'rtc', from: sess.id, data: msg.data })
+        break
+      }
     }
   }
 
@@ -190,6 +224,12 @@ export class Room {
     } catch {
       /* already closing */
     }
+    // if the live singer left, clear the publisher so viewers fall back
+    if (this.publisherId === sess.id) {
+      this.publisherId = null
+      this.broadcastEvent({ t: 'publisher', id: null })
+    }
+    this.broadcastEvent({ t: 'peer-leave', id: sess.id })
     if (this.sessions.size === 0) this.stopDecay()
     else this.broadcastState()
   }

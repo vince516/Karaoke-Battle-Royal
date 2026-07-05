@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { connectRoom, type Identity } from '../net/roomClient'
+import { connectRoom, roomBus, type Identity } from '../net/roomClient'
 import { useRoom } from '../state/roomStore'
 
 /* Connects the store to a room's Durable Object over WebSocket for the
@@ -10,7 +10,16 @@ export function useRoomSocket(code: string | undefined, identity: Identity) {
     if (!code) return
     const { handleServerMsg, setTransport, setConnected } = useRoom.getState()
 
-    const transport = connectRoom(code, identity, handleServerMsg, setConnected)
+    // fan every server frame out to the store (counters) and the bus (media)
+    const transport = connectRoom(
+      code,
+      identity,
+      (msg) => {
+        handleServerMsg(msg)
+        roomBus.emit(msg)
+      },
+      setConnected,
+    )
     setTransport(transport)
 
     return () => {

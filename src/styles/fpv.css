@@ -1,0 +1,298 @@
+/* ============================================================
+   Singer FPV view + view pager — adapted from arena.html.
+   Audience ⟷ "MY CAM": mirrored self-cam, giant lyrics, YOUR PART
+   pill, get-ready dots, mic/cam/end-set controls, incoming gifts.
+   ============================================================ */
+
+/* ---- page dots: ARENA ⟷ MY CAM ---- */
+.pagedots {
+  position: fixed;
+  left: 50%;
+  top: calc(58px + var(--sat));
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  transition: opacity 0.35s;
+}
+.ui-hidden .pagedots {
+  opacity: 0;
+  pointer-events: none;
+}
+.pagedots .pd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  color: var(--dim);
+  transition: color 0.3s;
+}
+.pagedots .pd i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: all 0.3s;
+}
+.pagedots .pd.on {
+  color: var(--txt);
+}
+.pagedots .pd.on i {
+  background: var(--red);
+  width: 18px;
+  border-radius: 999px;
+}
+
+/* ---- singer FPV layer ---- */
+.fpv {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: #08060c;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s;
+  overflow: hidden;
+}
+.fpv.on {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.fpv .selffeed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror the singer's own cam */
+  filter: saturate(1.1) contrast(1.05) brightness(0.96);
+}
+.fpv .selfgrain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(0, 0, 0, 0.55));
+}
+.fpv .camoff {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--mut);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.fpv .camoff .big {
+  font-size: 44px;
+}
+
+/* go-live call to action (viewer opens MY CAM before publishing) */
+.golive {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 0 32px;
+}
+.golive h2 {
+  font-family: 'Archivo';
+  font-weight: 900;
+  font-size: clamp(24px, 6vw, 32px);
+}
+.golive p {
+  color: var(--mut);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 340px;
+}
+.golive .startbtn {
+  margin-top: 8px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 900;
+  font-size: 16px;
+  border-radius: 999px;
+  padding: 15px 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: 0 8px 30px rgba(225, 10, 23, 0.45);
+  transition: transform 0.1s;
+}
+.golive .startbtn:active {
+  transform: scale(0.96);
+}
+.golive .err {
+  color: var(--splat);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* FPV lyrics */
+.singlyr {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(150px + var(--sab));
+  z-index: 3;
+  text-align: center;
+  padding: 0 18px;
+}
+.readydots {
+  display: inline-flex;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.readydots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: rdy 1.2s ease-in-out infinite;
+}
+.readydots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.readydots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes rdy {
+  50% {
+    background: var(--gold);
+    transform: scale(1.25);
+  }
+}
+.partpill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  margin-bottom: 12px;
+  background: var(--red);
+  color: #fff;
+}
+.singlyr .lline {
+  font-family: 'Archivo';
+  font-weight: 900;
+  font-size: clamp(26px, 6.4vw, 40px);
+  line-height: 1.12;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
+}
+.singlyr .lnext {
+  margin-top: 10px;
+  font-weight: 800;
+  font-size: clamp(14px, 3.4vw, 18px);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* FPV control bar */
+.fpvcontrols {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(34px + var(--sab));
+  z-index: 5;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.ctrlbtn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  transition: transform 0.12s, background 0.15s;
+}
+.ctrlbtn:active {
+  transform: scale(0.9);
+}
+.ctrlbtn.off {
+  background: rgba(255, 83, 48, 0.24);
+  border-color: rgba(255, 83, 48, 0.6);
+}
+.ctrlbtn.end {
+  background: var(--red);
+  border-color: var(--red);
+  width: 62px;
+  height: 62px;
+  font-size: 24px;
+}
+
+/* incoming gift banner */
+.inbanner {
+  position: absolute;
+  left: 50%;
+  top: calc(96px + var(--sat));
+  transform: translateX(-50%) translateY(-16px);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 179, 0, 0.5);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--gold);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.inbanner.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.inbanner .em {
+  font-size: 20px;
+}
+
+/* live indicator on the FPV */
+.fpvtag {
+  position: absolute;
+  left: 16px;
+  top: calc(16px + var(--sat));
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-weight: 800;
+  font-size: 11px;
+  backdrop-filter: blur(8px);
+}
+.fpvtag .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 1.4s infinite;
+}
